@@ -1,0 +1,5 @@
+[workspace]
+
+members = ["board-games","my-domain-bin","my-jinro"]
+
+resolver = "3"
