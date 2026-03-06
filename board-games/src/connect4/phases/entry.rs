@@ -1,7 +1,7 @@
 use crate::connect4::draw_data::{Connect4DrawData, Connect4DrawTask};
 use crate::connect4::phases::Connect4Phase;
 use crate::connect4::structs::{Connect4Data, Connect4Player};
-use my_board_game::{AnswerType, Constants, Phase, PhaseType};
+use crate::framework::{AnswerType, Constants, Phase, PhaseType};
 use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;

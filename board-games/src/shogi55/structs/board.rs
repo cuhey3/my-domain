@@ -1,11 +1,11 @@
 #[cfg(test)]
 mod tests;
 
+use crate::framework::TwoPlayer;
 use crate::shogi55::structs::board_inner::BoardInner;
 use crate::shogi55::structs::piece::Piece;
 use crate::shogi55::structs::piece_info::PieceInfo;
 use crate::shogi55::structs::possibility::{Possibility, Possible};
-use my_board_game::TwoPlayer;
 use rand::Rng;
 use rand::rngs::SmallRng;
 use std::collections::HashMap;

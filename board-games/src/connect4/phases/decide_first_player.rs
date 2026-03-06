@@ -1,7 +1,7 @@
 use crate::connect4::Connect4Data;
 use crate::connect4::draw_data::{Connect4DrawData, Connect4DrawTask};
 use crate::connect4::phases::Connect4Phase;
-use my_board_game::{AnswerType, GameData, Phase, PhaseType};
+use crate::framework::{AnswerType, GameData, Phase, PhaseType};
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 use std::any::Any;
@@ -97,7 +97,7 @@ impl DecideFirstPlayerPhase {
 mod tests {
     use crate::connect4::phases::decide_first_player::DecideFirstPlayerPhase;
     use crate::connect4::structs::Connect4Data;
-    use my_board_game::{GameData, Phase};
+    use crate::framework::{GameData, Phase};
     use rand::rngs::SmallRng;
     use rand::{RngCore, SeedableRng};
     use std::any::Any;

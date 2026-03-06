@@ -1,8 +1,8 @@
 use crate::BoardGames;
 use crate::connect4::Connect4Drawer;
 use crate::shogi55::Shogi55Drawer;
+use board_games::framework::{AnswerType, Drawer, GameSystem};
 use board_games::{init_connect4, init_shogi55};
-use my_board_game::{AnswerType, Drawer, GameSystem};
 use std::io;
 
 pub struct BoardGameRunner {

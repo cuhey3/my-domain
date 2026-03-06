@@ -1,6 +1,6 @@
 use board_games::Shogi55Board;
 use board_games::draw_data::{Shogi55DrawData, Shogi55DrawTask};
-use my_board_game::{Drawer, TwoPlayer};
+use board_games::framework::{Drawer, TwoPlayer};
 use std::any::Any;
 
 #[derive(Default)]

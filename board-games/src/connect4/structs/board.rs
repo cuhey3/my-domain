@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests;
 
-use my_board_game::TwoPlayer;
+use crate::framework::TwoPlayer;
 
 #[derive(Default, Clone)]
 pub struct Connect4Board {

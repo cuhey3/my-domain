@@ -2,7 +2,7 @@
 mod tests;
 
 use crate::connect4::structs::board::Connect4Board;
-use my_board_game::TwoPlayer;
+use crate::framework::TwoPlayer;
 
 pub struct SearchCheckmate {
     connect4board: Connect4Board,
@@ -22,7 +22,7 @@ impl SearchCheckmate {
 
     fn nest_search(&mut self, remain_nest_count: usize) -> (TwoPlayer, Vec<usize>) {
         let own = self.connect4board.get_next_player();
-        let opponent = own.opponent();
+        let opponent = own.next();
         let mut moves = vec![];
         // 自分がこの手で勝てるならその結果を返す
         for i in 1..8 {

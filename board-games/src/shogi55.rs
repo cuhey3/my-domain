@@ -1,7 +1,8 @@
+use crate::GameData;
+use crate::framework::GameSystem;
 use crate::shogi55::phases::Shogi55Phase;
 use crate::shogi55::phases::game_main::GameMainPhase;
 use crate::shogi55::structs::Shogi55Data;
-use my_board_game::{GameData, GameSystem};
 use std::cell::RefCell;
 use std::rc::Rc;
 

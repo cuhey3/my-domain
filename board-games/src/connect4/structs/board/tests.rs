@@ -1,5 +1,5 @@
 use crate::connect4::structs::board::Connect4Board;
-use my_board_game::TwoPlayer;
+use crate::framework::TwoPlayer;
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 

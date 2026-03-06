@@ -1,5 +1,5 @@
+use crate::framework::TwoPlayer;
 use crate::shogi55::structs::board::Shogi55Place;
-use my_board_game::TwoPlayer;
 use std::str::FromStr;
 
 pub enum Direction {

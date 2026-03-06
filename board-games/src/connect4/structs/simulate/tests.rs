@@ -1,6 +1,6 @@
 use crate::connect4::structs::board::Connect4Board;
 use crate::connect4::structs::simulate::Connect4Simulate;
-use my_board_game::TwoPlayer;
+use crate::framework::TwoPlayer;
 
 fn init_board() -> Connect4Board {
     Connect4Board::default()

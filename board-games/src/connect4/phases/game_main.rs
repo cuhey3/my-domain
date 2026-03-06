@@ -5,7 +5,7 @@ use crate::connect4::structs::{Connect4Data, Connect4Setting};
 
 use crate::connect4::draw_data::{Connect4DrawData, Connect4DrawTask};
 use crate::connect4::structs::search_checkmate::SearchCheckmate;
-use my_board_game::{AnswerType, GameData, Phase, PhaseType, TwoPlayer};
+use crate::framework::{AnswerType, GameData, Phase, PhaseType, TwoPlayer};
 use rand::rngs::SmallRng;
 use rand::{RngCore, SeedableRng};
 use std::any::Any;

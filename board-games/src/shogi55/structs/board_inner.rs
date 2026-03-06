@@ -1,8 +1,8 @@
+use crate::framework::TwoPlayer;
 use crate::shogi55::structs::board::Shogi55Place;
 use crate::shogi55::structs::piece::{Direction, Piece};
 use crate::shogi55::structs::piece_info::PieceInfo;
 use crate::shogi55::structs::possibility::Possible;
-use my_board_game::TwoPlayer;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 

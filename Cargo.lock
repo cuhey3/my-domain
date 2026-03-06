@@ -37,15 +37,12 @@ version = "0.1.0"
 dependencies = [
  "board-games",
  "getrandom",
- "my-board-game",
- "my-jinro",
 ]
 
 [[package]]
 name = "board-games"
 version = "0.1.0"
 dependencies = [
- "my-board-game",
  "rand",
 ]
 

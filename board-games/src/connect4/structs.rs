@@ -3,7 +3,7 @@ pub mod search_checkmate;
 pub mod simulate;
 
 use crate::Connect4DrawData;
-use my_board_game::{GameData, MatchMode};
+use crate::framework::{GameData, MatchMode};
 use rand::rngs::SmallRng;
 
 #[derive(Default)]

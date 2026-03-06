@@ -1,5 +1,5 @@
+use crate::framework::DrawData;
 use crate::shogi55::structs::board::Shogi55Board;
-use my_board_game::DrawData;
 
 #[derive(Default, Clone)]
 pub struct Shogi55DrawData {

@@ -1,6 +1,6 @@
+use crate::framework::TwoPlayer;
 use crate::shogi55::structs::piece::Piece;
 use crate::shogi55::structs::possibility::Possibility;
-use my_board_game::TwoPlayer;
 
 #[derive(Debug, Clone)]
 pub struct PieceInfo {

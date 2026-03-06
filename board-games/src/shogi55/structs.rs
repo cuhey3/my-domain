@@ -1,5 +1,5 @@
 use crate::draw_data::Shogi55DrawData;
-use my_board_game::GameData;
+use crate::framework::GameData;
 use rand::prelude::SmallRng;
 
 pub mod board;

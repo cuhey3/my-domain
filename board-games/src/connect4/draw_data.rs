@@ -1,5 +1,5 @@
 use crate::connect4::structs::board::Connect4Board;
-use my_board_game::DrawData;
+use crate::framework::DrawData;
 
 #[derive(Clone)]
 pub enum Connect4DrawTask {

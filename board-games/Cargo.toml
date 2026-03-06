@@ -6,4 +6,3 @@ edition = "2024"
 [dependencies]
 # wasm対応
 rand = { version = "0.9.0", default-features = false, features = ["small_rng"] }
-my-board-game = { path = "../../my-lib/my-board-game" }

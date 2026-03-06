@@ -7,7 +7,7 @@ use crate::connect4::phases::{
     setting::SettingPhase,
 };
 use crate::connect4::structs::Connect4Data;
-use my_board_game::{GameData, GameSystem};
+use crate::framework::{GameData, GameSystem};
 use phases::Connect4Phase;
 use std::cell::RefCell;
 use std::rc::Rc;

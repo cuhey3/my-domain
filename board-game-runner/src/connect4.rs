@@ -1,5 +1,5 @@
+use board_games::framework::{Drawer, TwoPlayer};
 use board_games::{Connect4Board, Connect4DrawData, Connect4DrawTask};
-use my_board_game::{Drawer, TwoPlayer};
 use std::any::Any;
 
 #[derive(Default)]

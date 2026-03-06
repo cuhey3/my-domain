@@ -1,6 +1,6 @@
 use crate::connect4::structs::board::Connect4Board;
 use crate::connect4::structs::search_checkmate::SearchCheckmate;
-use my_board_game::TwoPlayer;
+use crate::framework::TwoPlayer;
 
 fn draw(board: &Connect4Board) {
     println!("1 2 3 4 5 6 7");

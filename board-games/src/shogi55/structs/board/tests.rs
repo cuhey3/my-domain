@@ -1,6 +1,6 @@
+use crate::framework::TwoPlayer;
 use crate::shogi55::structs::board::{PieceInfo, Shogi55Board, Shogi55Move, Shogi55Place};
 use crate::shogi55::structs::piece::Piece;
-use my_board_game::TwoPlayer;
 use std::str::FromStr;
 use std::time::Instant;
 

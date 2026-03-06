@@ -1,11 +1,11 @@
 use crate::draw_data::Shogi55DrawTask;
+use crate::framework::{AnswerType, GameData, Phase, PhaseType, TwoPlayer};
 use crate::shogi55::draw_data::Shogi55DrawData;
 use crate::shogi55::phases::Shogi55Phase;
 use crate::shogi55::structs::Shogi55Data;
 use crate::shogi55::structs::board::{Shogi55Board, Shogi55Move, Shogi55Place};
 use crate::shogi55::structs::piece::Piece;
 use crate::shogi55::structs::simulate::Shogi55Simulate;
-use my_board_game::{AnswerType, GameData, Phase, PhaseType, TwoPlayer};
 use rand::prelude::SmallRng;
 use rand::{RngCore, SeedableRng};
 use std::any::Any;

@@ -4,7 +4,5 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-my-jinro = {path="../my-jinro"}
 board-games = {path= "../board-games" }
-my-board-game = {path="../../my-lib/my-board-game"}
 getrandom = "0.4.1"
