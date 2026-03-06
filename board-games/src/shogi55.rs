@@ -5,8 +5,9 @@ use my_board_game::{GameData, GameSystem};
 use std::cell::RefCell;
 use std::rc::Rc;
 
+pub mod draw_data;
 mod phases;
-mod structs;
+pub mod structs;
 
 pub fn init_shogi55(seed: u64) -> GameSystem {
     let mut data = Shogi55Data::default();

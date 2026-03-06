@@ -2,6 +2,21 @@ use crate::connect4::structs::board::Connect4Board;
 use crate::connect4::structs::search_checkmate::SearchCheckmate;
 use my_board_game::TwoPlayer;
 
+fn draw(board: &Connect4Board) {
+    println!("1 2 3 4 5 6 7");
+    for y in (0..6).rev() {
+        let row_string = (0..7)
+            .map(|x| match board.get_board()[x][y] {
+                TwoPlayer::None => "  ",
+                TwoPlayer::First => "■ ",
+                TwoPlayer::Second => "□ ",
+            })
+            .collect::<String>();
+        println!("{}", row_string);
+    }
+    println!("1 2 3 4 5 6 7");
+}
+
 fn init_board() -> Connect4Board {
     Connect4Board::default()
 }
@@ -54,7 +69,7 @@ fn test_specific_board() {
 #[test]
 fn test_checkmated_board() {
     let board = checkmated_board();
-    board.draw();
+    draw(&board);
     let result = SearchCheckmate::new(board, 7).search();
     assert_eq!(result, (TwoPlayer::Second, vec![4]));
 }

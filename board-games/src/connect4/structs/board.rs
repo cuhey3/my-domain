@@ -16,19 +16,8 @@ pub struct Connect4Board {
 }
 
 impl Connect4Board {
-    pub fn draw(&self) {
-        println!("1 2 3 4 5 6 7");
-        for y in (0..6).rev() {
-            let row_string = (0..7)
-                .map(|x| match self.board[x][y] {
-                    TwoPlayer::None => "  ",
-                    TwoPlayer::First => "■ ",
-                    TwoPlayer::Second => "□ ",
-                })
-                .collect::<String>();
-            println!("{}", row_string);
-        }
-        println!("1 2 3 4 5 6 7");
+    pub fn get_board(&self) -> &[[TwoPlayer; 6]; 7] {
+        &self.board
     }
 
     fn check_input(&self, input_index: usize) -> Result<(), String> {

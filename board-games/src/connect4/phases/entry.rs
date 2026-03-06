@@ -1,6 +1,7 @@
+use crate::connect4::draw_data::{Connect4DrawData, Connect4DrawTask};
 use crate::connect4::phases::Connect4Phase;
 use crate::connect4::structs::{Connect4Data, Connect4Player};
-use my_board_game::{Constants, DrawTask, Phase, PhaseType};
+use my_board_game::{AnswerType, Constants, Phase, PhaseType};
 use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -11,6 +12,7 @@ pub struct EntryPhase {
     connect4_player_a: Option<PlayerInput>,
     connect4_player_b: Option<PlayerInput>,
     has_cpu: bool,
+    draw_data: Connect4DrawData,
 }
 
 impl Phase for EntryPhase {
@@ -22,24 +24,32 @@ impl Phase for EntryPhase {
         Some(PhaseType::Entry)
     }
 
-    fn dialog_question(&mut self) -> Option<(String, Vec<isize>)> {
+    fn dialog_question(&mut self) -> Option<(AnswerType, Vec<isize>)> {
         match self.state_position {
-            0 => Some((
-                "一人目の名前を入力してください".into(),
-                vec![Constants::PlayerA as isize],
-            )),
-            1 => Some((
-                "一人目のidを入力してください".into(),
-                vec![Constants::PlayerA as isize],
-            )),
-            2 => Some((
-                "二人目の名前を入力してください".into(),
-                vec![Constants::PlayerB as isize],
-            )),
-            3 => Some((
-                "二人目のidを入力してください".into(),
-                vec![Constants::PlayerB as isize],
-            )),
+            0 => {
+                self.add_draw_task(Connect4DrawTask::Question(
+                    "一人目の名前を入力してください".into(),
+                ));
+                Some((AnswerType::Input, vec![Constants::PlayerA as isize]))
+            }
+            1 => {
+                self.add_draw_task(Connect4DrawTask::Question(
+                    "一人目のidを入力してください".into(),
+                ));
+                Some((AnswerType::Input, vec![Constants::PlayerA as isize]))
+            }
+            2 => {
+                self.add_draw_task(Connect4DrawTask::Question(
+                    "二人目の名前を入力してください".into(),
+                ));
+                Some((AnswerType::Input, vec![Constants::PlayerB as isize]))
+            }
+            3 => {
+                self.add_draw_task(Connect4DrawTask::Question(
+                    "二人目のidを入力してください".into(),
+                ));
+                Some((AnswerType::Input, vec![Constants::PlayerB as isize]))
+            }
             _ => None,
         }
     }
@@ -124,8 +134,8 @@ impl Phase for EntryPhase {
         }
     }
 
-    fn get_draw_tasks(&mut self) -> Vec<Box<dyn DrawTask>> {
-        todo!()
+    fn get_draw_data(&mut self) -> Box<&mut dyn Any> {
+        Box::new(&mut self.draw_data)
     }
 }
 
@@ -238,5 +248,11 @@ impl PlayerInput {
             return Err("id not set.".to_owned());
         };
         Ok(Connect4Player::new(name.to_owned(), *id))
+    }
+}
+
+impl EntryPhase {
+    fn add_draw_task(&mut self, connect4_draw_task: Connect4DrawTask) {
+        self.draw_data.add_task(connect4_draw_task);
     }
 }

@@ -1,3 +1,4 @@
+use crate::draw_data::Shogi55DrawData;
 use my_board_game::GameData;
 use rand::prelude::SmallRng;
 
@@ -13,6 +14,13 @@ pub mod possibility;
 #[derive(Default)]
 pub struct Shogi55Data {
     rng: Option<SmallRng>,
+    draw_data: Shogi55DrawData,
+}
+
+impl Shogi55Data {
+    pub fn get_draw_data(&self) -> &Shogi55DrawData {
+        &self.draw_data
+    }
 }
 
 impl GameData for Shogi55Data {

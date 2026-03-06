@@ -26,6 +26,22 @@ fn random_safe_move(board: &mut Connect4Board, random_wrapper: &mut RandomWrappe
         };
     }
 }
+
+fn draw(board: &Connect4Board) {
+    println!("1 2 3 4 5 6 7");
+    for y in (0..6).rev() {
+        let row_string = (0..7)
+            .map(|x| match board.get_board()[x][y] {
+                TwoPlayer::None => "  ",
+                TwoPlayer::First => "■ ",
+                TwoPlayer::Second => "□ ",
+            })
+            .collect::<String>();
+        println!("{}", row_string);
+    }
+    println!("1 2 3 4 5 6 7");
+}
+
 fn board_state_tests(board: &Connect4Board, cloned: &Connect4Board) {
     assert_eq!(board.stone_count, cloned.stone_count);
     assert_eq!(board.last_x, cloned.last_x);
@@ -143,7 +159,7 @@ fn test_reject_last_2_move_random() {
         if board.winner.exist() {
             continue;
         }
-        board.draw();
+        draw(&board);
         let cloned = board.clone();
         random_safe_move(&mut board, &mut random_wrapper);
         random_safe_move(&mut board, &mut random_wrapper);
@@ -153,7 +169,7 @@ fn test_reject_last_2_move_random() {
         if board.winner.exist() {
             continue;
         }
-        board.draw();
+        draw(&board);
         assert_eq!(board.reject_last_2_move(), Ok(()));
         board_state_tests(&board, &cloned);
         test_count += 1;
@@ -183,7 +199,7 @@ fn test_reject_last_one_move_random() {
         if board.winner.exist() {
             continue;
         }
-        board.draw();
+        draw(&board);
         let cloned = board.clone();
         random_safe_move(&mut board, &mut random_wrapper);
 
@@ -192,7 +208,7 @@ fn test_reject_last_one_move_random() {
         if board.winner.exist() {
             continue;
         }
-        board.draw();
+        draw(&board);
         assert_eq!(board.reject_last_one_move(), Ok(()));
         board_state_tests(&board, &cloned);
         test_count += 1;

@@ -3,8 +3,9 @@ use crate::connect4::structs::board::Connect4Board;
 use crate::connect4::structs::simulate::Connect4Simulate;
 use crate::connect4::structs::{Connect4Data, Connect4Setting};
 
+use crate::connect4::draw_data::{Connect4DrawData, Connect4DrawTask};
 use crate::connect4::structs::search_checkmate::SearchCheckmate;
-use my_board_game::{DrawTask, GameData, Phase, PhaseType, TwoPlayer};
+use my_board_game::{AnswerType, GameData, Phase, PhaseType, TwoPlayer};
 use rand::rngs::SmallRng;
 use rand::{RngCore, SeedableRng};
 use std::any::Any;
@@ -19,6 +20,7 @@ pub struct GameMainPhase {
     first_player_cpu_flag: bool,
     second_player_name: String,
     second_player_cpu_flag: bool,
+    draw_data: Connect4DrawData,
     rng: Option<SmallRng>,
 }
 
@@ -31,11 +33,14 @@ impl Phase for GameMainPhase {
         Some(PhaseType::GameMain)
     }
 
-    fn dialog_question(&mut self) -> Option<(String, Vec<isize>)> {
+    fn dialog_question(&mut self) -> Option<(AnswerType, Vec<isize>)> {
         let enable_do_over = self.connect4_setting.get_enable_do_over();
         if self.board.winner().exist() {
             return if enable_do_over {
-                Some(("待ったしますか？(cを入力)".into(), vec![]))
+                self.add_draw_task(Connect4DrawTask::Question(
+                    "待ったしますか？(cを入力)".into(),
+                ));
+                Some((AnswerType::Input, vec![]))
             } else {
                 None
             };
@@ -49,7 +54,10 @@ impl Phase for GameMainPhase {
         }
         if self.board.winner().exist() {
             return if enable_do_over {
-                Some(("待ったしますか？(cを入力)".into(), vec![]))
+                self.add_draw_task(Connect4DrawTask::Question(
+                    "待ったしますか？(cを入力)".into(),
+                ));
+                Some((AnswerType::Input, vec![]))
             } else {
                 None
             };
@@ -59,26 +67,24 @@ impl Phase for GameMainPhase {
         } else {
             ""
         };
-        self.board.draw();
+        self.add_draw_task(Connect4DrawTask::Board(self.board.clone()));
         if self.connect4_setting.get_with_eval_value() {
             let mut simulate = self.get_simulate();
             simulate.show_result();
         }
         if self.board.is_first_player_turn() {
-            Some((
-                format!(
-                    "先手: {}さんの番です(1-7を入力){}",
-                    self.first_player_name, additional_dialog
-                ),
-                // "■の番です(1-7)を入力".into(),
-                vec![],
-            ))
+            self.add_draw_task(Connect4DrawTask::Question(format!(
+                "先手: {}さんの番です(1-7を入力){}",
+                self.first_player_name, additional_dialog
+            )));
+            Some((AnswerType::Input, vec![]))
         } else {
+            self.add_draw_task(Connect4DrawTask::Question(format!(
+                "後手: {}さんの番です(1-7を入力){}",
+                self.second_player_name, additional_dialog
+            )));
             Some((
-                format!(
-                    "後手: {}さんの番です(1-7を入力){}",
-                    self.second_player_name, additional_dialog
-                ),
+                AnswerType::Input,
                 // "□の番です(1-7)を入力".into(),
                 vec![],
             ))
@@ -124,11 +130,10 @@ impl Phase for GameMainPhase {
         }
     }
 
-    fn get_draw_tasks(&mut self) -> Vec<Box<dyn DrawTask>> {
-        todo!()
+    fn get_draw_data(&mut self) -> Box<&mut dyn Any> {
+        Box::new(&mut self.draw_data)
     }
 }
-
 impl GameMainPhase {
     fn get_simulate(&mut self) -> Connect4Simulate {
         let nest_count = match self.board.stone_count {
@@ -164,18 +169,24 @@ impl GameMainPhase {
         Ok(())
     }
 
-    fn do_move_end(&self) {
+    fn do_move_end(&mut self) {
         let winner = self.board.winner();
         if winner.exist() {
-            self.board.draw();
-            println!(
+            self.add_draw_task(Connect4DrawTask::Board(self.board.clone()));
+            self.add_draw_task(Connect4DrawTask::Message(format!(
                 "{}の勝ちです",
                 if winner == TwoPlayer::First {
                     "■"
                 } else {
                     "□"
                 }
-            );
+            )))
         }
+    }
+}
+
+impl GameMainPhase {
+    fn add_draw_task(&mut self, connect4_draw_task: Connect4DrawTask) {
+        self.draw_data.add_task(connect4_draw_task);
     }
 }

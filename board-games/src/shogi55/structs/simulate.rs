@@ -17,10 +17,9 @@ impl Shogi55Simulate {
 
     pub fn simulate(&mut self) {}
 
-    pub fn get_best_move(&mut self) -> Shogi55Move {
+    pub fn get_best_move_with_eval_value(&mut self) -> (Shogi55Move, i32) {
         let pieces_with_moves = self.board.get_all_possible_moves();
         let (index, point) = self.board.nest_search(3, &mut self.rng);
-        println!("評価値: {}", point);
-        pieces_with_moves[index].clone()
+        (pieces_with_moves[index].clone(), point)
     }
 }

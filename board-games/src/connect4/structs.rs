@@ -2,6 +2,7 @@ pub mod board;
 pub mod search_checkmate;
 pub mod simulate;
 
+use crate::Connect4DrawData;
 use my_board_game::{GameData, MatchMode};
 use rand::rngs::SmallRng;
 
@@ -32,6 +33,7 @@ pub struct Connect4Data {
     players: [Connect4Player; 2],
     cpu_player_index: Option<usize>,
     setting: Connect4Setting,
+    draw_data: Connect4DrawData,
     rng: Option<SmallRng>,
 }
 

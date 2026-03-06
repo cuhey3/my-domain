@@ -8,6 +8,7 @@ use crate::shogi55::structs::possibility::{Possibility, Possible};
 use my_board_game::TwoPlayer;
 use rand::Rng;
 use rand::rngs::SmallRng;
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 #[derive(Default, Clone)]
@@ -117,6 +118,14 @@ impl Shogi55Board {
         self.init_all_possibilities();
     }
 
+    pub fn get_piece_in_hand(&self) -> &[Vec<Piece>; 2] {
+        &self.pieces_in_hand
+    }
+
+    pub fn get_placed_map(&self) -> &HashMap<Shogi55Place, PieceInfo> {
+        self.board_inner.placed_map()
+    }
+
     pub fn set_last_player_for_test(&mut self, player: TwoPlayer) {
         self.last_player = player;
     }
@@ -132,6 +141,10 @@ impl Shogi55Board {
             return Err("そこからは動かせません".into());
         }
         Ok(())
+    }
+
+    pub fn get_place_map_len(&self) -> usize {
+        self.board_inner.placed_map().len()
     }
 
     pub fn check_input_in_hand(
@@ -754,100 +767,5 @@ impl Shogi55Board {
             .placed_map_get_mut(place)
             .unwrap()
             .set_possibility(&possibility);
-    }
-
-    pub fn get_draw_data(&self) -> Vec<Vec<String>> {
-        let mut data = vec![vec!["   ".into(); 6]; 6];
-        self.board_inner
-            .placed_map()
-            .iter()
-            .for_each(|(place, info)| {
-                data[place.row][place.col] = format!(
-                    "{}{}",
-                    match info.get_player() {
-                        TwoPlayer::First => "▲",
-                        TwoPlayer::Second => "▽",
-                        TwoPlayer::None => " ",
-                    },
-                    info.get_piece().kanji()
-                );
-            });
-        data
-    }
-
-    pub fn draw(&self) {
-        let board_strings = self.get_draw_data();
-        let mut hand_strings = [["  "; 10]; 2];
-        for (i, item) in hand_strings.iter_mut().enumerate() {
-            // ソートされてる前提だからここではソートしない
-            // self.pieces_in_hand[i].sort_by_key(|p|*p as isize);
-            let pieces_len = self.pieces_in_hand[i].len();
-            for j in 0..pieces_len {
-                if i == 1 {
-                    item[j] = self.pieces_in_hand[i][j].kanji();
-                } else {
-                    item[10 - pieces_len + j] = self.pieces_in_hand[i][j].kanji();
-                }
-            }
-        }
-        println!(
-            "    5   4   3   2   1
-  ┌───┬───┬───┬───┬───┐   {}
-{}│{}│{}│{}│{}│{}│一 {}
-{}├───┼───┼───┼───┼───┤   {}
-{}│{}│{}│{}│{}│{}│二 {}
-{}├───┼───┼───┼───┼───┤   {}
-{}│{}│{}│{}│{}│{}│三 {}
-{}├───┼───┼───┼───┼───┤   {}
-{}│{}│{}│{}│{}│{}│四 {}
-{}├───┼───┼───┼───┼───┤   {}
-{}│{}│{}│{}│{}│{}│五 {}
-{}└───┴───┴───┴───┴───┘",
-            hand_strings[0][0],
-            hand_strings[1][0],
-            board_strings[1][5],
-            board_strings[1][4],
-            board_strings[1][3],
-            board_strings[1][2],
-            board_strings[1][1],
-            hand_strings[0][1],
-            hand_strings[1][1],
-            hand_strings[0][2],
-            hand_strings[1][2],
-            board_strings[2][5],
-            board_strings[2][4],
-            board_strings[2][3],
-            board_strings[2][2],
-            board_strings[2][1],
-            hand_strings[0][3],
-            hand_strings[1][3],
-            hand_strings[0][4],
-            hand_strings[1][4],
-            board_strings[3][5],
-            board_strings[3][4],
-            board_strings[3][3],
-            board_strings[3][2],
-            board_strings[3][1],
-            hand_strings[0][5],
-            hand_strings[1][5],
-            hand_strings[0][6],
-            hand_strings[1][6],
-            board_strings[4][5],
-            board_strings[4][4],
-            board_strings[4][3],
-            board_strings[4][2],
-            board_strings[4][1],
-            hand_strings[0][7],
-            hand_strings[1][7],
-            hand_strings[0][8],
-            hand_strings[1][8],
-            board_strings[5][5],
-            board_strings[5][4],
-            board_strings[5][3],
-            board_strings[5][2],
-            board_strings[5][1],
-            hand_strings[0][9],
-            hand_strings[1][9],
-        )
     }
 }

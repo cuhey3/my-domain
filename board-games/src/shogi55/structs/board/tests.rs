@@ -4,6 +4,98 @@ use my_board_game::TwoPlayer;
 use std::str::FromStr;
 use std::time::Instant;
 
+pub fn get_draw_data(board: &Shogi55Board) -> Vec<Vec<String>> {
+    let mut data = vec![vec!["   ".into(); 6]; 6];
+    board.get_placed_map().iter().for_each(|(place, info)| {
+        data[place.row][place.col] = format!(
+            "{}{}",
+            match info.get_player() {
+                TwoPlayer::First => "▲",
+                TwoPlayer::Second => "▽",
+                TwoPlayer::None => " ",
+            },
+            info.get_piece().kanji()
+        );
+    });
+    data
+}
+
+pub fn draw(board: &Shogi55Board) {
+    let board_strings = get_draw_data(board);
+    let mut hand_strings = [["  "; 10]; 2];
+    for (i, item) in hand_strings.iter_mut().enumerate() {
+        // ソートされてる前提だからここではソートしない
+        // self.pieces_in_hand[i].sort_by_key(|p|*p as isize);
+        let pieces_len = board.pieces_in_hand[i].len();
+        for j in 0..pieces_len {
+            if i == 1 {
+                item[j] = board.pieces_in_hand[i][j].kanji();
+            } else {
+                item[10 - pieces_len + j] = board.pieces_in_hand[i][j].kanji();
+            }
+        }
+    }
+    println!(
+        "    5   4   3   2   1
+  ┌───┬───┬───┬───┬───┐   {}
+{}│{}│{}│{}│{}│{}│一 {}
+{}├───┼───┼───┼───┼───┤   {}
+{}│{}│{}│{}│{}│{}│二 {}
+{}├───┼───┼───┼───┼───┤   {}
+{}│{}│{}│{}│{}│{}│三 {}
+{}├───┼───┼───┼───┼───┤   {}
+{}│{}│{}│{}│{}│{}│四 {}
+{}├───┼───┼───┼───┼───┤   {}
+{}│{}│{}│{}│{}│{}│五 {}
+{}└───┴───┴───┴───┴───┘",
+        hand_strings[0][0],
+        hand_strings[1][0],
+        board_strings[1][5],
+        board_strings[1][4],
+        board_strings[1][3],
+        board_strings[1][2],
+        board_strings[1][1],
+        hand_strings[0][1],
+        hand_strings[1][1],
+        hand_strings[0][2],
+        hand_strings[1][2],
+        board_strings[2][5],
+        board_strings[2][4],
+        board_strings[2][3],
+        board_strings[2][2],
+        board_strings[2][1],
+        hand_strings[0][3],
+        hand_strings[1][3],
+        hand_strings[0][4],
+        hand_strings[1][4],
+        board_strings[3][5],
+        board_strings[3][4],
+        board_strings[3][3],
+        board_strings[3][2],
+        board_strings[3][1],
+        hand_strings[0][5],
+        hand_strings[1][5],
+        hand_strings[0][6],
+        hand_strings[1][6],
+        board_strings[4][5],
+        board_strings[4][4],
+        board_strings[4][3],
+        board_strings[4][2],
+        board_strings[4][1],
+        hand_strings[0][7],
+        hand_strings[1][7],
+        hand_strings[0][8],
+        hand_strings[1][8],
+        board_strings[5][5],
+        board_strings[5][4],
+        board_strings[5][3],
+        board_strings[5][2],
+        board_strings[5][1],
+        hand_strings[0][9],
+        hand_strings[1][9],
+    )
+}
+
 fn get_all_place_from_in_hand_counts(board: &Shogi55Board) -> Vec<usize> {
     [
         (&TwoPlayer::First, false),
@@ -67,7 +159,7 @@ fn test_possible_moves1() {
 ▲歩,,,,
 ▲王,▲金,,▲角,";
     let mut board = board_from_string(board_string);
-    board.draw();
+    draw(&board);
     let now = time_start();
     board.set_last_player_for_test(TwoPlayer::First);
     let all_possible_moves_second = board.get_all_possible_moves();
@@ -109,7 +201,7 @@ fn test_possible_moves2() {
 ▲王,▲金,▽金,▲銀,
 ,,,,▲飛";
     let mut board = board_from_string(board_string);
-    board.draw();
+    draw(&board);
     let now = time_start();
     board.set_last_player_for_test(TwoPlayer::First);
     let all_possible_moves_second = board.get_all_possible_moves();
@@ -161,7 +253,7 @@ fn test_possible_moves3() {
 ,▲金,▲角,,
 ,,,,▲飛";
     let mut board = board_from_string(board_string);
-    board.draw();
+    draw(&board);
     let now = time_start();
     board.set_last_player_for_test(TwoPlayer::First);
     let all_possible_moves_second = board.get_all_possible_moves();
@@ -213,7 +305,7 @@ fn test_possible_moves4() {
     });
     assert!(result.is_ok());
 
-    board.draw();
+    draw(&board);
     let now = time_start();
     let result = board.check_input_from_to(&Shogi55Place::new(4, 2), &Shogi55Place::new(5, 1));
     assert!(result.is_ok());
@@ -250,7 +342,7 @@ fn test_possible_moves5() {
     let mut board = board_from_string(board_string);
     board.pieces_in_hand[TwoPlayer::First.get_index()].push(Piece::Pawn);
     board.pieces_in_hand[TwoPlayer::Second.get_index()].push(Piece::Pawn);
-    board.draw();
+    draw(&board);
     let now = time_start();
     board.set_last_player_for_test(TwoPlayer::First);
     let all_possible_moves_second = board.get_all_possible_moves();
@@ -292,7 +384,7 @@ fn test_possible_moves6() {
         to: Shogi55Place::new(5, 3),
         promotion_flag: false,
     });
-    board.draw();
+    draw(&board);
     println!("{:?}", result);
     let result = board.check_input_from_to(&Shogi55Place::new(5, 4), &Shogi55Place::new(5, 3));
     assert!(result.is_ok());
@@ -324,7 +416,7 @@ fn test_possible_moves7() {
 ▲王,▲角,▽金,▲金,
 ,,,,▲飛";
     let mut board = board_from_string(board_string);
-    board.draw();
+    draw(&board);
     let now = time_start();
     let possible_moves_by_king = board
         .board_inner

@@ -1,9 +1,11 @@
+use crate::draw_data::Shogi55DrawTask;
+use crate::shogi55::draw_data::Shogi55DrawData;
 use crate::shogi55::phases::Shogi55Phase;
 use crate::shogi55::structs::Shogi55Data;
 use crate::shogi55::structs::board::{Shogi55Board, Shogi55Move, Shogi55Place};
 use crate::shogi55::structs::piece::Piece;
 use crate::shogi55::structs::simulate::Shogi55Simulate;
-use my_board_game::{DrawTask, GameData, Phase, PhaseType, TwoPlayer};
+use my_board_game::{AnswerType, GameData, Phase, PhaseType, TwoPlayer};
 use rand::prelude::SmallRng;
 use rand::{RngCore, SeedableRng};
 use std::any::Any;
@@ -20,6 +22,8 @@ pub struct GameMainPhase {
     move_input: MoveInput,
     rng: Option<SmallRng>,
     state: usize,
+    draw_data: Shogi55DrawData,
+    eval_value: i32,
 }
 
 #[derive(Default)]
@@ -142,19 +146,34 @@ impl Phase for GameMainPhase {
         Some(PhaseType::GameMain)
     }
 
-    fn dialog_question(&mut self) -> Option<(String, Vec<isize>)> {
+    fn dialog_question(&mut self) -> Option<(AnswerType, Vec<isize>)> {
         let player_exp = if self.board.get_next_player() == TwoPlayer::First {
             "先手"
         } else {
             "後手"
         };
         match self.state {
-            0 => Some((
-                format!("{player_exp}: どの駒を動かしますか(持ち駒の漢字、または数字二桁)"),
-                vec![],
-            )),
-            1 => Some((format!("{player_exp}: どこへ指しますか(数字二桁)"), vec![])),
-            2 => Some((format!("{player_exp}: 駒を成りますか？(y/n)"), vec![])),
+            0 => {
+                self.add_draw_task(Shogi55DrawTask::Board(self.board.clone()));
+                self.add_draw_task(Shogi55DrawTask::EvaluateValue(self.eval_value));
+                self.add_draw_task(Shogi55DrawTask::Question(format!(
+                    "{player_exp}: どの駒を動かしますか(持ち駒の漢字、または数字二桁)"
+                )));
+                Some((AnswerType::Input, vec![]))
+            }
+            1 => {
+                self.add_draw_task(Shogi55DrawTask::Question(format!(
+                    "{player_exp}: どこへ指しますか(数字二桁)"
+                )));
+                Some((AnswerType::Input, vec![]))
+            }
+            2 => {
+                self.add_draw_task(Shogi55DrawTask::Question(format!(
+                    "{player_exp}: 駒を成りますか？(y/n)"
+                )));
+                Some((AnswerType::Input, vec![]))
+            }
+            3 => Some((AnswerType::Skip, vec![])),
             _ => panic!(),
         }
     }
@@ -190,9 +209,23 @@ impl Phase for GameMainPhase {
             2 => {
                 self.move_input.input_answer_promotion_flag(answer)?;
             }
+            3 => {
+                let mut simulate = Shogi55Simulate::get_simulate(
+                    &self.board,
+                    self.rng.as_mut().unwrap().next_u64(),
+                );
+                simulate.simulate();
+                let (_move, point) = simulate.get_best_move_with_eval_value();
+                self.eval_value = point;
+                self.board.safe_move(_move)?;
+                // if self.board.is_checkmated() {
+                //     println!("詰みです")
+                // };
+                self.state = 0;
+                return Ok(());
+            }
             _ => panic!(),
         }
-        self.state = 0;
         let MoveInput {
             in_hand_piece,
             from_square_index,
@@ -211,17 +244,11 @@ impl Phase for GameMainPhase {
         // if self.board.is_checkmated() {
         //     println!("詰みです")
         // };
-        self.board.draw();
-        let mut simulate =
-            Shogi55Simulate::get_simulate(&self.board, self.rng.as_mut().unwrap().next_u64());
-        simulate.simulate();
-        let _move = simulate.get_best_move();
-        self.board.safe_move(_move)?;
-
-        self.board.draw();
-        // if self.board.is_checkmated() {
-        //     println!("詰みです")
-        // };
+        self.draw_data
+            .add_task(Shogi55DrawTask::Board(self.board.clone()));
+        self.draw_data
+            .add_task(Shogi55DrawTask::Message("CPUが考えています...".into()));
+        self.state = 3;
         Ok(())
     }
 
@@ -232,8 +259,8 @@ impl Phase for GameMainPhase {
     fn read_data(&mut self, game_data: &Rc<RefCell<dyn Any>>) -> Result<(), String> {
         if let Some(data) = game_data.borrow_mut().downcast_mut::<Shogi55Data>() {
             self.rng = Some(SmallRng::seed_from_u64(data.create_seed()));
+            self.draw_data = data.get_draw_data().clone();
             self.board.init();
-            self.board.draw();
             Ok(())
         } else {
             Err("downcast error".into())
@@ -244,7 +271,13 @@ impl Phase for GameMainPhase {
         todo!()
     }
 
-    fn get_draw_tasks(&mut self) -> Vec<Box<dyn DrawTask>> {
-        todo!()
+    fn get_draw_data(&mut self) -> Box<&mut dyn Any> {
+        Box::new(&mut self.draw_data)
+    }
+}
+
+impl GameMainPhase {
+    fn add_draw_task(&mut self, shogi55draw_task: Shogi55DrawTask) {
+        self.draw_data.add_task(shogi55draw_task);
     }
 }

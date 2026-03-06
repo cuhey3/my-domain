@@ -1,6 +1,7 @@
 use crate::connect4::Connect4Data;
+use crate::connect4::draw_data::{Connect4DrawData, Connect4DrawTask};
 use crate::connect4::phases::Connect4Phase;
-use my_board_game::{DrawTask, GameData, Phase, PhaseType};
+use my_board_game::{AnswerType, GameData, Phase, PhaseType};
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 use std::any::Any;
@@ -13,6 +14,7 @@ pub struct DecideFirstPlayerPhase {
     a_name: String,
     b_name: String,
     swap_flag: bool,
+    draw_data: Connect4DrawData,
     rng: Option<SmallRng>,
 }
 
@@ -25,9 +27,12 @@ impl Phase for DecideFirstPlayerPhase {
         Some(PhaseType::DecideFirstPlayer)
     }
 
-    fn dialog_question(&mut self) -> Option<(String, Vec<isize>)> {
+    fn dialog_question(&mut self) -> Option<(AnswerType, Vec<isize>)> {
         match self.state_position {
-            0 => Some(("先手を決定します".into(), vec![])),
+            0 => {
+                self.add_draw_task(Connect4DrawTask::Question("先手を決定します".into()));
+                Some((AnswerType::Input, vec![]))
+            }
             1 => {
                 self.toss();
                 let text = format!(
@@ -38,7 +43,8 @@ impl Phase for DecideFirstPlayerPhase {
                         &self.a_name
                     }
                 );
-                Some((text, vec![]))
+                self.add_draw_task(Connect4DrawTask::Question(text));
+                Some((AnswerType::Input, vec![]))
             }
             _ => None,
         }
@@ -76,8 +82,8 @@ impl Phase for DecideFirstPlayerPhase {
         }
     }
 
-    fn get_draw_tasks(&mut self) -> Vec<Box<dyn DrawTask>> {
-        todo!()
+    fn get_draw_data(&mut self) -> Box<&mut dyn Any> {
+        Box::new(&mut self.draw_data)
     }
 }
 
@@ -182,5 +188,11 @@ mod tests {
         }
 
         assert!(!phase.swap_flag);
+    }
+}
+
+impl DecideFirstPlayerPhase {
+    fn add_draw_task(&mut self, connect4_draw_task: Connect4DrawTask) {
+        self.draw_data.add_task(connect4_draw_task);
     }
 }

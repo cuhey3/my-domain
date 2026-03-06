@@ -1,5 +1,5 @@
 [workspace]
 
-members = ["board-games","my-domain-bin","my-jinro"]
+members = ["board-game-runner","board-games","my-domain-bin", "my-jinro"]
 
 resolver = "3"

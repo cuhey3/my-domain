@@ -1,3 +1,4 @@
+pub mod draw_data;
 mod phases;
 pub mod structs;
 

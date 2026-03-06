@@ -1,6 +1,7 @@
+use crate::connect4::draw_data::{Connect4DrawData, Connect4DrawTask};
 use crate::connect4::phases::Connect4Phase;
 use crate::connect4::structs::{Connect4Data, Connect4Setting};
-use my_board_game::{DrawTask, Phase, PhaseType};
+use my_board_game::{AnswerType, Phase, PhaseType};
 use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -9,6 +10,7 @@ use std::rc::Rc;
 pub struct SettingPhase {
     state_position: usize,
     connect4_setting: Connect4Setting,
+    draw_data: Connect4DrawData,
 }
 
 impl Phase for SettingPhase {
@@ -20,11 +22,26 @@ impl Phase for SettingPhase {
         Some(PhaseType::Setting)
     }
 
-    fn dialog_question(&mut self) -> Option<(String, Vec<isize>)> {
+    fn dialog_question(&mut self) -> Option<(AnswerType, Vec<isize>)> {
         match self.state_position {
-            0 => Some(("CPUと対戦しますか？(y/n)".into(), vec![])),
-            1 => Some(("待ったをありにしますか？(y/n)".into(), vec![])),
-            2 => Some(("評価値を表示しますか？(y/n)".into(), vec![])),
+            0 => {
+                self.add_draw_task(Connect4DrawTask::Question(
+                    "CPUと対戦しますか？(y/n)".into(),
+                ));
+                Some((AnswerType::Input, vec![]))
+            }
+            1 => {
+                self.add_draw_task(Connect4DrawTask::Question(
+                    "待ったをありにしますか？(y/n)".into(),
+                ));
+                Some((AnswerType::Input, vec![]))
+            }
+            2 => {
+                self.add_draw_task(Connect4DrawTask::Question(
+                    "評価値を表示しますか？(y/n)".into(),
+                ));
+                Some((AnswerType::Input, vec![]))
+            }
             _ => None,
         }
     }
@@ -78,7 +95,13 @@ impl Phase for SettingPhase {
         }
     }
 
-    fn get_draw_tasks(&mut self) -> Vec<Box<dyn DrawTask>> {
-        todo!()
+    fn get_draw_data(&mut self) -> Box<&mut dyn Any> {
+        Box::new(&mut self.draw_data)
+    }
+}
+
+impl SettingPhase {
+    fn add_draw_task(&mut self, connect4_draw_task: Connect4DrawTask) {
+        self.draw_data.add_task(connect4_draw_task);
     }
 }
