@@ -7,9 +7,10 @@ pub enum Connect4DrawTask {
     PlayerInfo,
     Question(String),
     Message(String),
+    GameResult(String),
     ErrorMessage(String),
     DebugMessage(String),
-    EvaluateValue(i32),
+    EvaluateValue(String),
 }
 #[derive(Default, Clone)]
 pub struct Connect4DrawData {

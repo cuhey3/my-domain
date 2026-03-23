@@ -87,7 +87,7 @@ impl Connect4Simulate {
         self.sort_result()
     }
 
-    pub fn show_result(&mut self) {
+    pub fn show_result(&mut self) -> String {
         let own_stone = self.board.get_next_player();
         let checkmate_stone = self.checkmate_result.0;
         let print_str: String = self
@@ -117,7 +117,7 @@ impl Connect4Simulate {
                 )
             })
             .collect();
-        println!("{}", print_str);
+        print_str
     }
 
     fn sort_result(&mut self) {

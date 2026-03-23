@@ -62,20 +62,25 @@ impl Phase for DecideFirstPlayerPhase {
     fn read_data(&mut self, game_data: &Rc<RefCell<dyn Any>>) -> Result<(), String> {
         if let Some(game_data) = game_data.borrow_mut().downcast_mut::<Connect4Data>() {
             game_data.get_first_player().get_name();
+
             self.a_name = game_data.get_first_player().get_name();
+
             self.b_name = game_data.get_second_player().get_name();
+
             self.rng = Some(SmallRng::seed_from_u64(game_data.create_seed()));
+
             Ok(())
         } else {
             Err("downcast error".into())
         }
     }
 
-    fn write_data(&self, game_data: &Rc<RefCell<dyn Any>>) -> Result<(), String> {
+    fn write_data(&mut self, game_data: &Rc<RefCell<dyn Any>>) -> Result<(), String> {
         if let Some(game_data) = game_data.borrow_mut().downcast_mut::<Connect4Data>() {
             if self.swap_flag {
                 game_data.swap_player();
             }
+
             Ok(())
         } else {
             Err("downcast error".into())
@@ -106,12 +111,16 @@ mod tests {
 
     fn get_phase() -> DecideFirstPlayerPhase {
         let mut phase = DecideFirstPlayerPhase::default();
+
         phase.rng = Some(SmallRng::seed_from_u64(0));
+
         phase
     }
     fn get_data() -> Rc<RefCell<dyn Any>> {
         let mut data = Connect4Data::default();
+
         data.set_seed(SmallRng::seed_from_u64(0).next_u64());
+
         Rc::new(RefCell::new(data))
     }
 
@@ -119,6 +128,7 @@ mod tests {
     fn set_player_name(any_data: Rc<RefCell<dyn Any>>, player_a_name: &str, player_b_name: &str) {
         if let Some(game_data) = any_data.borrow_mut().downcast_mut::<Connect4Data>() {
             game_data.get_first_player().set_name(player_a_name);
+
             game_data.get_second_player().set_name(player_b_name);
         } else {
             panic!()

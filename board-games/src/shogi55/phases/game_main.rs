@@ -267,7 +267,7 @@ impl Phase for GameMainPhase {
         }
     }
 
-    fn write_data(&self, game_data: &Rc<RefCell<dyn Any>>) -> Result<(), String> {
+    fn write_data(&mut self, game_data: &Rc<RefCell<dyn Any>>) -> Result<(), String> {
         todo!()
     }
 

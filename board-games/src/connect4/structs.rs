@@ -32,6 +32,7 @@ impl Connect4Player {
 pub struct Connect4Data {
     players: [Connect4Player; 2],
     cpu_player_index: Option<usize>,
+    online_player_index: Option<usize>,
     setting: Connect4Setting,
     draw_data: Connect4DrawData,
     rng: Option<SmallRng>,
@@ -59,20 +60,34 @@ impl Connect4Data {
     pub fn get_first_player(&mut self) -> &mut Connect4Player {
         &mut self.players[0]
     }
+
     pub fn get_second_player(&mut self) -> &mut Connect4Player {
         &mut self.players[1]
     }
+
     pub fn swap_player(&mut self) {
         self.players.swap(0, 1);
         self.cpu_player_index = Some(0);
+        self.online_player_index = Some(0);
     }
+
     pub fn has_cpu(&self) -> bool {
         matches!(self.setting.match_mode, MatchMode::Computer)
+    }
+
+    pub fn is_online(&self) -> bool {
+        matches!(self.setting.match_mode, MatchMode::Casual)
     }
 
     pub fn set_default_cpu_player_index_if_necessary(&mut self) {
         if matches!(self.setting.match_mode, MatchMode::Computer) {
             self.cpu_player_index = Some(1);
+        }
+    }
+
+    pub fn set_default_online_player_index_if_necessary(&mut self) {
+        if matches!(self.setting.match_mode, MatchMode::Casual) {
+            self.online_player_index = Some(1);
         }
     }
 
@@ -86,18 +101,42 @@ impl Connect4Data {
         }
     }
 
+    fn player_is_online(&self, index: usize) -> bool {
+        match self.setting.match_mode {
+            MatchMode::Casual => match self.online_player_index {
+                Some(i) => i == index,
+                _ => false,
+            },
+            _ => false,
+        }
+    }
+
     pub fn first_player_is_cpu(&self) -> bool {
         self.player_is_cpu(0)
     }
+
     pub fn second_player_is_cpu(&self) -> bool {
         self.player_is_cpu(1)
     }
+
+    pub fn first_player_is_online(&self) -> bool {
+        self.player_is_online(0)
+    }
+
+    pub fn second_player_is_online(&self) -> bool {
+        self.player_is_online(1)
+    }
+
     pub fn set_setting(&mut self, connect4_setting: Connect4Setting) {
         self.setting = connect4_setting;
     }
 
     pub fn get_setting(&self) -> &Connect4Setting {
         &self.setting
+    }
+
+    pub fn get_draw_data(&self) -> &Connect4DrawData {
+        &self.draw_data
     }
 }
 
@@ -114,9 +153,11 @@ impl Connect4Setting {
     pub fn set_enable_do_over(&mut self, enable_do_over: bool) {
         self.enable_do_over = enable_do_over;
     }
+
     pub fn set_with_eval_value(&mut self, with_eval_value: bool) {
         self.with_eval_value = with_eval_value;
     }
+
     pub fn set_cpu_mode(&mut self, has_cpu: bool) {
         if has_cpu {
             self.match_mode = MatchMode::Computer;
@@ -124,6 +165,15 @@ impl Connect4Setting {
             self.match_mode = MatchMode::Offline;
         }
     }
+
+    pub fn set_online_mode(&mut self, online_mode: bool) {
+        if online_mode {
+            self.match_mode = MatchMode::Casual;
+        } else {
+            self.match_mode = MatchMode::Offline;
+        }
+    }
+
     pub fn get_enable_do_over(&self) -> bool {
         self.enable_do_over
     }

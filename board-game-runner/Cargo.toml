@@ -5,4 +5,11 @@ edition = "2024"
 
 [dependencies]
 board-games = {path= "../board-games" }
-getrandom = "0.4.1"
+bid-of-power = {path= "../bid-of-power" }
+matching-if = { git = "https://github.com/cuhey3/my-if.git" }
+getrandom = "0.4.2"
+tokio = { version = "1.50.0", features = ["full"] }
+webrtc-adapter = { git = "https://github.com/cuhey3/my-tokio.git" }
+webrtc-if = { git = "https://github.com/cuhey3/my-if.git" }
+http-client-adapter = { git = "https://github.com/cuhey3/my-tokio.git" }
+rustls = "0.23.37"

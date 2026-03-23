@@ -28,7 +28,9 @@ impl Drawer for Connect4Drawer {
             match task {
                 Connect4DrawTask::Question(message) => println!("{}", message),
                 Connect4DrawTask::Message(message) => println!("{}", message),
-                Connect4DrawTask::EvaluateValue(point) => println!("評価値: {}", point),
+                Connect4DrawTask::DebugMessage(message) => println!("{}", message),
+                Connect4DrawTask::EvaluateValue(message) => println!("評価値: {}", message),
+                Connect4DrawTask::GameResult(result) => println!("{}", result),
                 Connect4DrawTask::Board(board) => Connect4Drawer::draw_board(&board),
                 _ => {}
             }

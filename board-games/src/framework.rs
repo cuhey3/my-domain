@@ -1,3 +1,5 @@
+pub mod input_util;
+
 use rand::rngs::SmallRng;
 use rand::{RngCore, SeedableRng};
 use std::any::Any;
@@ -39,6 +41,8 @@ pub enum AnswerType {
     Input,
     Skip,
     Wait,
+    WaitWithMessage(String),
+    NoWaitWithMessage(String),
 }
 
 pub trait Phase {
@@ -48,8 +52,16 @@ pub trait Phase {
     fn dialog_answer(&mut self, answer: String, args: Vec<isize>) -> Result<(), String>;
     fn next_phase_id(&mut self) -> Option<usize>;
     fn read_data(&mut self, game_data: &Rc<RefCell<dyn Any>>) -> Result<(), String>;
-    fn write_data(&self, game_data: &Rc<RefCell<dyn Any>>) -> Result<(), String>;
+    fn write_data(&mut self, game_data: &Rc<RefCell<dyn Any>>) -> Result<(), String>;
     fn get_draw_data(&mut self) -> Box<&mut dyn Any>;
+    fn is_required_matching(&self) -> bool {
+        false
+    }
+    fn set_is_player_a(&mut self, is_player_a: bool) {}
+
+    fn dialog_answer_json(&mut self, json: &str) -> Result<(), String> {
+        todo!()
+    }
 }
 
 pub enum Constants {

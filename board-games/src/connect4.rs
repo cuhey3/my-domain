@@ -2,6 +2,7 @@ pub mod draw_data;
 mod phases;
 pub mod structs;
 
+use crate::connect4::phases::online_decide_first_player::OnlineDecideFirstPlayerPhase;
 use crate::connect4::phases::{
     decide_first_player::DecideFirstPlayerPhase, entry::EntryPhase, game_main::GameMainPhase,
     setting::SettingPhase,
@@ -29,6 +30,7 @@ pub fn init_connect4(seed: u64) -> GameSystem {
             Box::new(SettingPhase::default()),
             Box::new(EntryPhase::default()),
             Box::new(DecideFirstPlayerPhase::default()),
+            Box::new(OnlineDecideFirstPlayerPhase::default()),
             Box::new(GameMainPhase::default()),
         ],
         game_data: Rc::new(RefCell::new(data)),

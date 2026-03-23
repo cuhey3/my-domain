@@ -26,20 +26,30 @@ impl Phase for SettingPhase {
         match self.state_position {
             0 => {
                 self.add_draw_task(Connect4DrawTask::Question(
-                    "CPUと対戦しますか？(y/n)".into(),
+                    "オンライン対戦しますか？(y/n)".into(),
                 ));
+
                 Some((AnswerType::Input, vec![]))
             }
             1 => {
                 self.add_draw_task(Connect4DrawTask::Question(
-                    "待ったをありにしますか？(y/n)".into(),
+                    "CPUと対戦しますか？(y/n)".into(),
                 ));
+
                 Some((AnswerType::Input, vec![]))
             }
             2 => {
                 self.add_draw_task(Connect4DrawTask::Question(
+                    "待ったをありにしますか？(y/n)".into(),
+                ));
+
+                Some((AnswerType::Input, vec![]))
+            }
+            3 => {
+                self.add_draw_task(Connect4DrawTask::Question(
                     "評価値を表示しますか？(y/n)".into(),
                 ));
+
                 Some((AnswerType::Input, vec![]))
             }
             _ => None,
@@ -55,18 +65,35 @@ impl Phase for SettingPhase {
         };
         match self.state_position {
             0 => {
-                self.connect4_setting.set_cpu_mode(flag);
+                self.connect4_setting.set_online_mode(flag);
+
                 self.state_position += 1;
+
+                if flag {
+                    self.state_position += 1;
+                }
+
                 Ok(())
             }
             1 => {
-                self.connect4_setting.set_enable_do_over(flag);
+                self.connect4_setting.set_cpu_mode(flag);
+
                 self.state_position += 1;
+
                 Ok(())
             }
             2 => {
-                self.connect4_setting.set_with_eval_value(flag);
+                self.connect4_setting.set_enable_do_over(flag);
+
                 self.state_position += 1;
+
+                Ok(())
+            }
+            3 => {
+                self.connect4_setting.set_with_eval_value(flag);
+
+                self.state_position += 1;
+
                 Ok(())
             }
             _ => Ok(()),
@@ -79,16 +106,22 @@ impl Phase for SettingPhase {
 
     fn read_data(&mut self, game_data: &Rc<RefCell<dyn Any>>) -> Result<(), String> {
         if let Some(game_data) = game_data.borrow_mut().downcast_mut::<Connect4Data>() {
+            self.draw_data = game_data.get_draw_data().clone();
+
             Ok(())
         } else {
             Err("downcast error".into())
         }
     }
 
-    fn write_data(&self, game_data: &Rc<RefCell<dyn Any>>) -> Result<(), String> {
+    fn write_data(&mut self, game_data: &Rc<RefCell<dyn Any>>) -> Result<(), String> {
         if let Some(game_data) = game_data.borrow_mut().downcast_mut::<Connect4Data>() {
             game_data.set_setting(self.connect4_setting);
+
             game_data.set_default_cpu_player_index_if_necessary();
+
+            game_data.set_default_online_player_index_if_necessary();
+
             Ok(())
         } else {
             Err("downcast error".into())

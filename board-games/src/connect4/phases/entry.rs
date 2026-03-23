@@ -12,6 +12,7 @@ pub struct EntryPhase {
     connect4_player_a: Option<PlayerInput>,
     connect4_player_b: Option<PlayerInput>,
     has_cpu: bool,
+    is_online: bool,
     draw_data: Connect4DrawData,
 }
 
@@ -27,27 +28,43 @@ impl Phase for EntryPhase {
     fn dialog_question(&mut self) -> Option<(AnswerType, Vec<isize>)> {
         match self.state_position {
             0 => {
-                self.add_draw_task(Connect4DrawTask::Question(
-                    "一人目の名前を入力してください".into(),
-                ));
+                let own_name_expression = if self.is_online || self.has_cpu {
+                    "あなた"
+                } else {
+                    "一人目"
+                };
+
+                self.add_draw_task(Connect4DrawTask::Question(format!(
+                    "{own_name_expression}の名前を入力してください"
+                )));
+
                 Some((AnswerType::Input, vec![Constants::PlayerA as isize]))
             }
             1 => {
-                self.add_draw_task(Connect4DrawTask::Question(
-                    "一人目のidを入力してください".into(),
-                ));
+                let own_name_expression = if self.is_online || self.has_cpu {
+                    "あなた"
+                } else {
+                    "一人目"
+                };
+
+                self.add_draw_task(Connect4DrawTask::Question(format!(
+                    "{own_name_expression}のidを入力してください"
+                )));
+
                 Some((AnswerType::Input, vec![Constants::PlayerA as isize]))
             }
             2 => {
                 self.add_draw_task(Connect4DrawTask::Question(
                     "二人目の名前を入力してください".into(),
                 ));
+
                 Some((AnswerType::Input, vec![Constants::PlayerB as isize]))
             }
             3 => {
                 self.add_draw_task(Connect4DrawTask::Question(
                     "二人目のidを入力してください".into(),
                 ));
+
                 Some((AnswerType::Input, vec![Constants::PlayerB as isize]))
             }
             _ => None,
@@ -59,33 +76,49 @@ impl Phase for EntryPhase {
         match self.state_position {
             0 => {
                 self.entry(&args)?;
+
                 self.set_name(answer, &args)?;
+
                 self.state_position += 1;
+
                 Ok(())
             }
             1 => {
                 let id: u64 = answer.parse().map_err(|_| "parse error".to_owned())?;
+
                 self.set_player_id(id, &args)?;
+
                 self.state_position += 1;
-                if self.has_cpu {
+
+                if self.has_cpu || self.is_online {
                     self.connect4_player_b = Some(PlayerInput {
+                        // TODO
+                        // is_online の場合は CPU ではない
                         name: Some("CPU".into()),
                         id: Some(0),
                     });
+
                     self.state_position += 3;
                 }
+
                 Ok(())
             }
             2 => {
                 self.entry(&args)?;
+
                 self.set_name(answer, &args)?;
+
                 self.state_position += 1;
+
                 Ok(())
             }
             3 => {
                 let id: u64 = answer.parse().map_err(|_| "parse error".to_owned())?;
+
                 self.set_player_id(id, &args)?;
+
                 self.state_position += 1;
+
                 Ok(())
             }
             // 4 => {
@@ -104,34 +137,53 @@ impl Phase for EntryPhase {
     }
 
     fn next_phase_id(&mut self) -> Option<usize> {
-        Some(Connect4Phase::DecideFirstPlayer as usize)
+        if self.is_online {
+            Some(Connect4Phase::OnlineDecideFirstPlayer as usize)
+        } else {
+            Some(Connect4Phase::DecideFirstPlayer as usize)
+        }
     }
 
     fn read_data(&mut self, game_data: &Rc<RefCell<dyn Any>>) -> Result<(), String> {
-        if let Some(game_data) = game_data.borrow_mut().downcast_mut::<Connect4Data>() {
-            self.has_cpu = game_data.has_cpu();
-            Ok(())
-        } else {
-            Err("downcast error".into())
-        }
+        let mut game_data = game_data.borrow_mut();
+
+        let game_data = game_data
+            .downcast_mut::<Connect4Data>()
+            .ok_or("downcast error")?;
+
+        self.has_cpu = game_data.has_cpu();
+
+        self.is_online = game_data.is_online();
+
+        Ok(())
     }
 
-    fn write_data(&self, game_data: &Rc<RefCell<dyn Any>>) -> Result<(), String> {
-        if let Some(game_data) = game_data.borrow_mut().downcast_mut::<Connect4Data>() {
-            let Some(connect4_player) = &self.connect4_player_a else {
-                return Err("connect4_player_a is none.".to_owned());
-            };
-            let player = connect4_player.create_connect4_player()?;
-            game_data.set_first_player(player);
-            let Some(connect4_player) = &self.connect4_player_b else {
-                return Err("connect4_player_b is none.".to_owned());
-            };
-            let player = connect4_player.create_connect4_player()?;
-            game_data.set_second_player(player);
-            Ok(())
-        } else {
-            Err("downcast error".into())
-        }
+    fn write_data(&mut self, game_data: &Rc<RefCell<dyn Any>>) -> Result<(), String> {
+        let mut game_data = game_data.borrow_mut();
+
+        let game_data = game_data
+            .downcast_mut::<Connect4Data>()
+            .ok_or("downcast error")?;
+
+        let connect4_player = &self
+            .connect4_player_a
+            .as_ref()
+            .ok_or("connect4_player_a is none.")?;
+
+        let player = connect4_player.create_connect4_player()?;
+
+        game_data.set_first_player(player);
+
+        let connect4_player = &self
+            .connect4_player_b
+            .as_ref()
+            .ok_or("connect4_player_b is none.")?;
+
+        let player = connect4_player.create_connect4_player()?;
+
+        game_data.set_second_player(player);
+
+        Ok(())
     }
 
     fn get_draw_data(&mut self) -> Box<&mut dyn Any> {
@@ -164,16 +216,16 @@ impl EntryPhase {
     }
 
     fn check_player(&self, _: &Vec<isize>) -> Result<(), String> {
-        if let Some(player_a) = self.connect4_player_a.as_ref() {
-            player_a.check_fulfilled()?;
-        } else {
-            return Err("Player A is not entered.".to_owned());
-        }
-        if let Some(player_b) = self.connect4_player_b.as_ref() {
-            player_b.check_fulfilled()?;
-        } else {
-            return Err("Player B is not entered.".to_owned());
-        }
+        self.connect4_player_a
+            .as_ref()
+            .ok_or("Player A is not entered.")?
+            .check_fulfilled()?;
+
+        self.connect4_player_b
+            .as_ref()
+            .ok_or("Player B is not entered.")?
+            .check_fulfilled()?;
+
         Ok(())
     }
     fn set_name(&mut self, name: &str, args: &[isize]) -> Result<(), String> {
@@ -233,20 +285,17 @@ impl PlayerInput {
         self.name = Some(name);
     }
     pub fn check_fulfilled(&self) -> Result<(), String> {
-        if self.name.is_none() {
-            return Err("Player's name is not entered.".to_owned());
-        } else if self.id.is_none() {
-            return Err("Player's id is not entered.".to_owned());
-        }
+        self.name.as_ref().ok_or("Player's name is not entered.")?;
+
+        self.id.as_ref().ok_or("Player's id is not entered.")?;
+
         Ok(())
     }
     pub fn create_connect4_player(&self) -> Result<Connect4Player, String> {
-        let Some(name) = self.name.as_ref() else {
-            return Err("name not set.".to_owned());
-        };
-        let Some(id) = self.id.as_ref() else {
-            return Err("id not set.".to_owned());
-        };
+        let name = self.name.as_ref().ok_or("name not set.")?;
+
+        let id = self.id.as_ref().ok_or("id not set.")?;
+
         Ok(Connect4Player::new(name.to_owned(), *id))
     }
 }

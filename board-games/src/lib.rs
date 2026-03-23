@@ -4,6 +4,7 @@ mod shogi55;
 
 pub use crate::framework::GameData;
 pub use crate::framework::GameSystem;
+pub use crate::framework::input_util::convert_input;
 pub use connect4::draw_data::Connect4DrawData;
 pub use connect4::draw_data::Connect4DrawTask;
 pub use connect4::init_connect4;

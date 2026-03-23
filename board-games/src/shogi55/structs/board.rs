@@ -359,9 +359,12 @@ impl Shogi55Board {
         piece: &Piece,
     ) -> Result<usize, String> {
         let player_in_hand = &mut self.pieces_in_hand[player.get_index()];
-        let Some(index) = player_in_hand.iter().position(|p| piece == p) else {
-            return Err("piece not in hand".into());
-        };
+
+        let index = player_in_hand
+            .iter()
+            .position(|p| piece == p)
+            .ok_or("piece not in hand")?;
+
         Ok(index)
     }
 
