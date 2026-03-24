@@ -12,7 +12,7 @@ enum BoardGames {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let mut board_game_runner = BoardGameRunner::new_with_name(Connect4);
+    let mut board_game_runner = BoardGameRunner::new_with_name(Shogi55);
     // let mut board_game_runner = BoardGameRunner::new_for_dev();
     let result = board_game_runner.run().await;
     println!("{:?}", result);

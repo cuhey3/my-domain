@@ -1,21 +1,22 @@
-use crate::connect4::draw_data::{Connect4DrawData, Connect4DrawTask};
-use crate::connect4::phases::Connect4Phase;
-use crate::connect4::structs::{Connect4Data, Connect4Setting};
+use crate::framework::phases::CommonPhase;
+use crate::framework::structs::common_draw_data::{CommonDrawData, CommonDrawTask};
+use crate::framework::structs::match_setting::MatchSetting;
 use crate::framework::{AnswerType, Phase, PhaseType};
 use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
+use crate::framework::structs::common_game_data::CommonGameData;
 
 #[derive(Default)]
-pub struct SettingPhase {
+pub struct CommonSettingPhase {
     state_position: usize,
-    connect4_setting: Connect4Setting,
-    draw_data: Connect4DrawData,
+    match_setting: MatchSetting,
+    common_draw_data: CommonDrawData,
 }
 
-impl Phase for SettingPhase {
+impl Phase for CommonSettingPhase {
     fn get_phase_id(&self) -> usize {
-        Connect4Phase::Setting as usize
+        CommonPhase::Setting as usize
     }
 
     fn phase_type(&self) -> Option<PhaseType> {
@@ -25,28 +26,28 @@ impl Phase for SettingPhase {
     fn dialog_question(&mut self) -> Option<(AnswerType, Vec<isize>)> {
         match self.state_position {
             0 => {
-                self.add_draw_task(Connect4DrawTask::Question(
+                self.add_common_draw_task(CommonDrawTask::Question(
                     "オンライン対戦しますか？(y/n)".into(),
                 ));
 
                 Some((AnswerType::Input, vec![]))
             }
             1 => {
-                self.add_draw_task(Connect4DrawTask::Question(
+                self.add_common_draw_task(CommonDrawTask::Question(
                     "CPUと対戦しますか？(y/n)".into(),
                 ));
 
                 Some((AnswerType::Input, vec![]))
             }
             2 => {
-                self.add_draw_task(Connect4DrawTask::Question(
+                self.add_common_draw_task(CommonDrawTask::Question(
                     "待ったをありにしますか？(y/n)".into(),
                 ));
 
                 Some((AnswerType::Input, vec![]))
             }
             3 => {
-                self.add_draw_task(Connect4DrawTask::Question(
+                self.add_common_draw_task(CommonDrawTask::Question(
                     "評価値を表示しますか？(y/n)".into(),
                 ));
 
@@ -65,7 +66,7 @@ impl Phase for SettingPhase {
         };
         match self.state_position {
             0 => {
-                self.connect4_setting.set_online_mode(flag);
+                self.match_setting.set_online_mode(flag);
 
                 self.state_position += 1;
 
@@ -76,21 +77,21 @@ impl Phase for SettingPhase {
                 Ok(())
             }
             1 => {
-                self.connect4_setting.set_cpu_mode(flag);
+                self.match_setting.set_cpu_mode(flag);
 
                 self.state_position += 1;
 
                 Ok(())
             }
             2 => {
-                self.connect4_setting.set_enable_do_over(flag);
+                self.match_setting.set_enable_do_over(flag);
 
                 self.state_position += 1;
 
                 Ok(())
             }
             3 => {
-                self.connect4_setting.set_with_eval_value(flag);
+                self.match_setting.set_with_eval_value(flag);
 
                 self.state_position += 1;
 
@@ -101,40 +102,31 @@ impl Phase for SettingPhase {
     }
 
     fn next_phase_id(&mut self) -> Option<usize> {
-        Some(Connect4Phase::Entry as usize)
+        Some(CommonPhase::Entry as usize)
     }
 
     fn read_data(&mut self, game_data: &Rc<RefCell<dyn Any>>) -> Result<(), String> {
-        if let Some(game_data) = game_data.borrow_mut().downcast_mut::<Connect4Data>() {
-            self.draw_data = game_data.get_draw_data().clone();
-
-            Ok(())
-        } else {
-            Err("downcast error".into())
-        }
+        Ok(())
     }
 
-    fn write_data(&mut self, game_data: &Rc<RefCell<dyn Any>>) -> Result<(), String> {
-        if let Some(game_data) = game_data.borrow_mut().downcast_mut::<Connect4Data>() {
-            game_data.set_setting(self.connect4_setting);
+    fn write_common_data(&mut self, game_data: &Rc<RefCell<CommonGameData>>) -> Result<(), String> {
+        let mut game_data = game_data.borrow_mut();
+        game_data.set_setting(self.match_setting);
 
-            game_data.set_default_cpu_player_index_if_necessary();
+        game_data.set_default_cpu_player_index_if_necessary();
 
-            game_data.set_default_online_player_index_if_necessary();
+        game_data.set_default_online_player_index_if_necessary();
 
-            Ok(())
-        } else {
-            Err("downcast error".into())
-        }
+        Ok(())
     }
 
-    fn get_draw_data(&mut self) -> Box<&mut dyn Any> {
-        Box::new(&mut self.draw_data)
+    fn get_common_draw_data(&mut self) -> &mut CommonDrawData {
+        &mut self.common_draw_data
     }
 }
 
-impl SettingPhase {
-    fn add_draw_task(&mut self, connect4_draw_task: Connect4DrawTask) {
-        self.draw_data.add_task(connect4_draw_task);
+impl CommonSettingPhase {
+    fn add_common_draw_task(&mut self, common_draw_task: CommonDrawTask) {
+        self.common_draw_data.add_task(common_draw_task);
     }
 }

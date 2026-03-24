@@ -1,20 +1,24 @@
 use crate::connect4::phases::Connect4Phase;
 use crate::connect4::structs::board::Connect4Board;
 use crate::connect4::structs::simulate::Connect4Simulate;
-use crate::connect4::structs::{Connect4Data, Connect4Setting};
 
 use crate::connect4::draw_data::{Connect4DrawData, Connect4DrawTask};
 use crate::connect4::structs::search_checkmate::SearchCheckmate;
-use crate::framework::{AnswerType, GameData, Phase, PhaseType, TwoPlayer};
+use crate::framework::structs::common_draw_data::CommonDrawData;
+use crate::framework::structs::match_setting::MatchSetting;
+use crate::framework::{
+    AnswerType, DrawData, GameData, Phase, PhaseType, TwoPlayer,
+};
 use rand::rngs::SmallRng;
 use rand::{RngCore, SeedableRng};
 use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
+use crate::framework::structs::common_game_data::CommonGameData;
 
 #[derive(Default)]
 pub struct GameMainPhase {
-    connect4_setting: Connect4Setting,
+    connect4_setting: MatchSetting,
     board: Connect4Board,
     first_player_name: String,
     first_player_cpu_flag: bool,
@@ -23,6 +27,7 @@ pub struct GameMainPhase {
     second_player_cpu_flag: bool,
     second_player_online_flag: bool,
     draw_data: Connect4DrawData,
+    common_draw_data: CommonDrawData,
     rng: Option<SmallRng>,
 }
 
@@ -132,40 +137,36 @@ impl Phase for GameMainPhase {
         None
     }
 
-    fn read_data(&mut self, game_data: &Rc<RefCell<dyn Any>>) -> Result<(), String> {
-        if let Some(data) = game_data.borrow_mut().downcast_mut::<Connect4Data>() {
-            self.first_player_name = data.get_first_player().get_name().clone();
+    fn read_common_data(&mut self, game_data: &Rc<RefCell<CommonGameData>>) -> Result<(), String> {
+        let mut data = game_data.borrow_mut();
+        self.first_player_name = data.get_first_player().get_name().clone();
 
-            self.second_player_name = data.get_second_player().get_name().clone();
+        self.second_player_name = data.get_second_player().get_name().clone();
 
-            self.first_player_cpu_flag = data.first_player_is_cpu();
+        self.first_player_cpu_flag = data.first_player_is_cpu();
 
-            self.second_player_cpu_flag = data.second_player_is_cpu();
+        self.second_player_cpu_flag = data.second_player_is_cpu();
 
-            self.first_player_online_flag = data.first_player_is_online();
+        self.first_player_online_flag = data.first_player_is_online();
 
-            self.second_player_online_flag = data.second_player_is_online();
+        self.second_player_online_flag = data.second_player_is_online();
 
-            self.connect4_setting = *data.get_setting();
+        self.connect4_setting = *data.get_setting();
 
-            self.rng = Some(SmallRng::seed_from_u64(data.create_seed()));
+        self.rng = Some(SmallRng::seed_from_u64(data.create_seed()));
 
-            Ok(())
-        } else {
-            Err("downcast error".into())
-        }
+        Ok(())
     }
 
-    fn write_data(&mut self, game_data: &Rc<RefCell<dyn Any>>) -> Result<(), String> {
-        if let Some(game_data) = game_data.borrow_mut().downcast_mut::<Connect4Data>() {
-            Ok(())
-        } else {
-            Err("downcast error".into())
-        }
+    fn has_draw_task(&mut self) -> bool {
+        self.draw_data.has_task()
     }
-
     fn get_draw_data(&mut self) -> Box<&mut dyn Any> {
         Box::new(&mut self.draw_data)
+    }
+
+    fn get_common_draw_data(&mut self) -> &mut CommonDrawData {
+        &mut self.common_draw_data
     }
 
     fn dialog_answer_json(&mut self, json: &str) -> Result<(), String> {
@@ -235,9 +236,7 @@ impl GameMainPhase {
             )))
         }
     }
-}
 
-impl GameMainPhase {
     fn add_draw_task(&mut self, connect4_draw_task: Connect4DrawTask) {
         self.draw_data.add_task(connect4_draw_task);
     }

@@ -1,5 +1,9 @@
 use crate::draw_data::Shogi55DrawTask;
-use crate::framework::{AnswerType, GameData, Phase, PhaseType, TwoPlayer};
+use crate::framework::structs::common_draw_data::CommonDrawData;
+use crate::framework::structs::match_setting::MatchSetting;
+use crate::framework::{
+    AnswerType, DrawData, GameData, Phase, PhaseType, TwoPlayer,
+};
 use crate::shogi55::draw_data::Shogi55DrawData;
 use crate::shogi55::phases::Shogi55Phase;
 use crate::shogi55::structs::Shogi55Data;
@@ -12,17 +16,23 @@ use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::str::FromStr;
+use crate::framework::structs::common_game_data::CommonGameData;
 
 #[derive(Default)]
 pub struct GameMainPhase {
-    is_first_player_turn: bool,
+    shogi55_setting: MatchSetting,
     board: Shogi55Board,
     first_player_name: String,
+    first_player_cpu_flag: bool,
+    first_player_online_flag: bool,
     second_player_name: String,
+    second_player_cpu_flag: bool,
+    second_player_online_flag: bool,
     move_input: MoveInput,
     rng: Option<SmallRng>,
     state: usize,
     draw_data: Shogi55DrawData,
+    common_draw_data: CommonDrawData,
     eval_value: i32,
 }
 
@@ -147,14 +157,55 @@ impl Phase for GameMainPhase {
     }
 
     fn dialog_question(&mut self) -> Option<(AnswerType, Vec<isize>)> {
+        let enable_do_over = self.shogi55_setting.get_enable_do_over();
+
+        if self.board.winner().exist() {
+            return if enable_do_over {
+                self.add_draw_task(Shogi55DrawTask::Question(
+                    "待ったしますか？(cを入力)".into(),
+                ));
+                Some((AnswerType::Input, vec![]))
+            } else {
+                None
+            };
+        }
+
+        if self.board.is_first_player_turn() {
+            if self.first_player_cpu_flag {
+                self.draw_data
+                    .add_task(Shogi55DrawTask::Message("CPUが考えています...".into()));
+
+                return Some((AnswerType::Skip, vec![]));
+            } else if self.first_player_online_flag {
+                self.add_draw_task(Shogi55DrawTask::Question(
+                    "入力を待っています...".to_owned(),
+                ));
+
+                return Some((AnswerType::Wait, vec![]));
+            }
+        } else {
+            if self.second_player_cpu_flag {
+                self.draw_data
+                    .add_task(Shogi55DrawTask::Message("CPUが考えています...".into()));
+
+                return Some((AnswerType::Skip, vec![]));
+            } else if self.second_player_online_flag {
+                self.add_draw_task(Shogi55DrawTask::Question(
+                    "入力を待っています...".to_owned(),
+                ));
+
+                return Some((AnswerType::Wait, vec![]));
+            }
+        }
+
         let player_exp = if self.board.get_next_player() == TwoPlayer::First {
             "先手"
         } else {
             "後手"
         };
+
         match self.state {
             0 => {
-                self.add_draw_task(Shogi55DrawTask::Board(self.board.clone()));
                 self.add_draw_task(Shogi55DrawTask::EvaluateValue(self.eval_value));
                 self.add_draw_task(Shogi55DrawTask::Question(format!(
                     "{player_exp}: どの駒を動かしますか(持ち駒の漢字、または数字二桁)"
@@ -180,11 +231,23 @@ impl Phase for GameMainPhase {
 
     fn dialog_answer(&mut self, answer: String, args: Vec<isize>) -> Result<(), String> {
         let answer = answer.trim();
+
+        if (self.board.is_first_player_turn() && self.first_player_cpu_flag)
+            || (!self.board.is_first_player_turn() && self.second_player_cpu_flag)
+        {
+            self.do_cpu_move().expect("CPU操作が失敗しました");
+
+            self.add_draw_task(Shogi55DrawTask::Board(self.board.clone()));
+
+            return Ok(());
+        }
+
         if answer == "c" {
             self.move_input.reset();
             self.state = 0;
             return Ok(());
         }
+
         match self.state {
             0 => {
                 self.move_input.input_answer_from(answer, &self.board)?;
@@ -209,23 +272,9 @@ impl Phase for GameMainPhase {
             2 => {
                 self.move_input.input_answer_promotion_flag(answer)?;
             }
-            3 => {
-                let mut simulate = Shogi55Simulate::get_simulate(
-                    &self.board,
-                    self.rng.as_mut().unwrap().next_u64(),
-                );
-                simulate.simulate();
-                let (_move, point) = simulate.get_best_move_with_eval_value();
-                self.eval_value = point;
-                self.board.safe_move(_move)?;
-                // if self.board.is_checkmated() {
-                //     println!("詰みです")
-                // };
-                self.state = 0;
-                return Ok(());
-            }
             _ => panic!(),
         }
+
         let MoveInput {
             in_hand_piece,
             from_square_index,
@@ -233,6 +282,7 @@ impl Phase for GameMainPhase {
             promotion_flag,
             ..
         } = self.move_input;
+
         self.board.safe_move(Shogi55Move::from_input(
             self.board.get_next_player(),
             in_hand_piece,
@@ -240,15 +290,13 @@ impl Phase for GameMainPhase {
             to_square_index.unwrap(),
             promotion_flag.unwrap_or(false),
         ))?;
+
         self.move_input.reset();
-        // if self.board.is_checkmated() {
-        //     println!("詰みです")
-        // };
+
         self.draw_data
             .add_task(Shogi55DrawTask::Board(self.board.clone()));
-        self.draw_data
-            .add_task(Shogi55DrawTask::Message("CPUが考えています...".into()));
-        self.state = 3;
+
+        self.state = 0;
         Ok(())
     }
 
@@ -258,26 +306,77 @@ impl Phase for GameMainPhase {
 
     fn read_data(&mut self, game_data: &Rc<RefCell<dyn Any>>) -> Result<(), String> {
         if let Some(data) = game_data.borrow_mut().downcast_mut::<Shogi55Data>() {
-            self.rng = Some(SmallRng::seed_from_u64(data.create_seed()));
             self.draw_data = data.get_draw_data().clone();
+
             self.board.init();
+
+            self.add_draw_task(Shogi55DrawTask::Board(self.board.clone()));
+
             Ok(())
         } else {
             Err("downcast error".into())
         }
     }
 
+    fn read_common_data(&mut self, game_data: &Rc<RefCell<CommonGameData>>) -> Result<(), String> {
+        let mut data = game_data.borrow_mut();
+
+        self.rng = Some(SmallRng::seed_from_u64(data.create_seed()));
+
+        self.first_player_cpu_flag = data.first_player_is_cpu();
+
+        self.second_player_cpu_flag = data.second_player_is_cpu();
+
+        self.first_player_online_flag = data.first_player_is_online();
+
+        self.second_player_online_flag = data.second_player_is_online();
+
+        self.shogi55_setting = *data.get_setting();
+
+        self.first_player_name = data.get_first_player().get_name().clone();
+
+        self.second_player_name = data.get_second_player().get_name().clone();
+
+        Ok(())
+    }
     fn write_data(&mut self, game_data: &Rc<RefCell<dyn Any>>) -> Result<(), String> {
         todo!()
     }
 
+    fn has_draw_task(&mut self) -> bool {
+        self.draw_data.has_task()
+    }
+
     fn get_draw_data(&mut self) -> Box<&mut dyn Any> {
         Box::new(&mut self.draw_data)
+    }
+
+    fn get_common_draw_data(&mut self) -> &mut CommonDrawData {
+        &mut self.common_draw_data
+    }
+
+    fn dialog_answer_json(&mut self, json: &str) -> Result<(), String> {
+        self.dialog_answer(json.to_owned(), vec![])
     }
 }
 
 impl GameMainPhase {
     fn add_draw_task(&mut self, shogi55draw_task: Shogi55DrawTask) {
         self.draw_data.add_task(shogi55draw_task);
+    }
+
+    fn do_cpu_move(&mut self) -> Result<(), String> {
+        let mut simulate =
+            Shogi55Simulate::get_simulate(&self.board, self.rng.as_mut().unwrap().next_u64());
+
+        simulate.simulate();
+
+        let (_move, point) = simulate.get_best_move_with_eval_value();
+
+        self.eval_value = point;
+
+        self.board.safe_move(_move)?;
+
+        Ok(())
     }
 }

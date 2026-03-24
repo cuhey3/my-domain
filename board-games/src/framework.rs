@@ -1,15 +1,20 @@
 pub mod input_util;
+pub mod phases;
+pub mod structs;
 
+use crate::framework::structs::common_draw_data::CommonDrawData;
 use rand::rngs::SmallRng;
 use rand::{RngCore, SeedableRng};
 use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
+use structs::common_game_data::CommonGameData;
 
 pub struct GameSystem {
     pub phase_id: usize,
     pub phases: Vec<Box<dyn Phase>>,
     pub game_data: Rc<RefCell<dyn Any>>,
+    pub common_game_data: Rc<RefCell<CommonGameData>>,
 }
 
 impl GameSystem {
@@ -47,19 +52,50 @@ pub enum AnswerType {
 
 pub trait Phase {
     fn get_phase_id(&self) -> usize;
+
     fn phase_type(&self) -> Option<PhaseType>;
+
     fn dialog_question(&mut self) -> Option<(AnswerType, Vec<isize>)>;
+
     fn dialog_answer(&mut self, answer: String, args: Vec<isize>) -> Result<(), String>;
+
     fn next_phase_id(&mut self) -> Option<usize>;
-    fn read_data(&mut self, game_data: &Rc<RefCell<dyn Any>>) -> Result<(), String>;
-    fn write_data(&mut self, game_data: &Rc<RefCell<dyn Any>>) -> Result<(), String>;
-    fn get_draw_data(&mut self) -> Box<&mut dyn Any>;
+
+    fn read_data(&mut self, _: &Rc<RefCell<dyn Any>>) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn read_common_data(&mut self, _: &Rc<RefCell<CommonGameData>>) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn write_data(&mut self, _: &Rc<RefCell<dyn Any>>) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn write_common_data(&mut self, _: &Rc<RefCell<CommonGameData>>) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn has_draw_task(&mut self) -> bool {
+        false
+    }
+
+    fn get_draw_data(&mut self) -> Box<&mut dyn Any> {
+        unimplemented!()
+    }
+
+    fn get_common_draw_data(&mut self) -> &mut CommonDrawData;
+
     fn is_required_matching(&self) -> bool {
         false
     }
-    fn set_is_player_a(&mut self, is_player_a: bool) {}
 
-    fn dialog_answer_json(&mut self, json: &str) -> Result<(), String> {
+    fn set_is_player_a(&mut self, _: bool) {
+        todo!()
+    }
+
+    fn dialog_answer_json(&mut self, _: &str) -> Result<(), String> {
         todo!()
     }
 }
@@ -69,21 +105,18 @@ pub enum Constants {
     PlayerB,
 }
 
-#[derive(Default, Clone, Copy)]
-pub enum MatchMode {
-    Computer,
-    #[default]
-    Offline,
-    Casual,
-    Ranked,
-}
-
 pub trait GameData {
-    fn get_rng(&mut self) -> &mut Option<SmallRng>;
-    fn set_rng(&mut self, rng: Option<SmallRng>);
+    fn get_rng(&mut self) -> &mut Option<SmallRng> {
+        unimplemented!()
+    }
+    fn set_rng(&mut self, _: Option<SmallRng>) {
+        unimplemented!()
+    }
+
     fn set_seed(&mut self, seed: u64) {
         self.set_rng(Some(SmallRng::seed_from_u64(seed)));
     }
+
     fn create_seed(&mut self) -> u64 {
         self.get_rng().as_mut().unwrap().next_u64()
     }
@@ -115,3 +148,4 @@ impl TwoPlayer {
         !matches!(self, TwoPlayer::None)
     }
 }
+

@@ -3,6 +3,7 @@ use crate::connect4::Connect4Drawer;
 use crate::shogi55::Shogi55Drawer;
 use bid_of_power::init_bop;
 use bid_of_power::structs::BoPDrawer;
+use board_games::framework::structs::common_draw_data::{CommonDrawData, CommonDrawTask};
 use board_games::framework::{AnswerType, Drawer, GameSystem};
 use board_games::{init_connect4, init_shogi55};
 use http_client_adapter::http_client_adapter_impl::HttpClientAdapterImpl;
@@ -15,6 +16,7 @@ pub struct BoardGameRunner {
     game_system: GameSystem,
     peer_connection_wrapper: Option<PeerConnectionAdapterImpl>,
     drawer: Box<dyn Drawer>,
+    common_drawer: CommonDrawer,
 }
 
 impl BoardGameRunner {
@@ -25,11 +27,13 @@ impl BoardGameRunner {
                 game_system: init_connect4(seed),
                 peer_connection_wrapper: None,
                 drawer: Box::new(Connect4Drawer::default()),
+                common_drawer: CommonDrawer,
             },
             BoardGames::Shogi55 => BoardGameRunner {
                 game_system: init_shogi55(seed),
                 peer_connection_wrapper: None,
                 drawer: Box::new(Shogi55Drawer::default()),
+                common_drawer: CommonDrawer,
             },
         }
     }
@@ -40,6 +44,7 @@ impl BoardGameRunner {
             game_system: init_bop(seed),
             peer_connection_wrapper: None,
             drawer: Box::new(BoPDrawer::default()),
+            common_drawer: CommonDrawer {},
         }
     }
 
@@ -53,6 +58,7 @@ impl BoardGameRunner {
 
         loop {
             let game_data = &self.game_system.game_data.clone();
+            let common_game_data = &self.game_system.common_game_data.clone();
 
             let phase_id = self.game_system.phase_id;
 
@@ -78,12 +84,15 @@ impl BoardGameRunner {
 
                 self.peer_connection_wrapper = Some(peer_connection_wrapper);
             }
-
+            phase.read_common_data(common_game_data)?;
             phase.read_data(game_data)?;
 
             while let Some((answer_type, args)) = phase.dialog_question() {
                 loop {
-                    self.drawer.draw(phase.get_draw_data());
+                    self.common_drawer.draw(phase.get_common_draw_data());
+                    if phase.has_draw_task() {
+                        self.drawer.draw(phase.get_draw_data());
+                    }
 
                     if let AnswerType::WaitWithMessage(ref message) = answer_type {
                         self.peer_connection_wrapper
@@ -149,14 +158,34 @@ impl BoardGameRunner {
                 }
             }
 
+            phase.write_common_data(common_game_data)?;
             phase.write_data(game_data)?;
 
-            self.drawer.draw(phase.get_draw_data());
+            if phase.has_draw_task() {
+                self.drawer.draw(phase.get_draw_data());
+            }
 
             if let Some(phase_id) = phase.next_phase_id() {
                 self.game_system.phase_id = phase_id;
             } else {
                 break Ok(());
+            }
+        }
+    }
+}
+
+struct CommonDrawer;
+
+impl CommonDrawer {
+    fn draw(&mut self, draw_data: &mut CommonDrawData) {
+        while let Some(task) = draw_data.take_task() {
+            match task {
+                CommonDrawTask::Question(message) => println!("{}", message),
+                CommonDrawTask::Message(message) => println!("{}", message),
+                CommonDrawTask::DebugMessage(message) => println!("{}", message),
+                CommonDrawTask::EvaluateValue(message) => println!("評価値: {}", message),
+                CommonDrawTask::GameResult(result) => println!("{}", result),
+                _ => {}
             }
         }
     }

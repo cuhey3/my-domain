@@ -1,24 +1,24 @@
-use crate::connect4::draw_data::{Connect4DrawData, Connect4DrawTask};
-use crate::connect4::phases::Connect4Phase;
-use crate::connect4::structs::{Connect4Data, Connect4Player};
+use crate::framework::phases::CommonPhase;
+use crate::framework::structs::common_draw_data::{CommonDrawData, CommonDrawTask};
 use crate::framework::{AnswerType, Constants, Phase, PhaseType};
-use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
+use crate::framework::structs::common_player::CommonPlayer;
+use crate::framework::structs::common_game_data::CommonGameData;
 
 #[derive(Default)]
-pub struct EntryPhase {
+pub struct CommonEntryPhase {
     state_position: usize,
-    connect4_player_a: Option<PlayerInput>,
-    connect4_player_b: Option<PlayerInput>,
+    shogi55_player_a: Option<PlayerInput>,
+    shogi55_player_b: Option<PlayerInput>,
     has_cpu: bool,
     is_online: bool,
-    draw_data: Connect4DrawData,
+    common_draw_data: CommonDrawData,
 }
 
-impl Phase for EntryPhase {
+impl Phase for CommonEntryPhase {
     fn get_phase_id(&self) -> usize {
-        Connect4Phase::Entry as usize
+        CommonPhase::Entry as usize
     }
 
     fn phase_type(&self) -> Option<PhaseType> {
@@ -34,7 +34,7 @@ impl Phase for EntryPhase {
                     "一人目"
                 };
 
-                self.add_draw_task(Connect4DrawTask::Question(format!(
+                self.add_common_draw_task(CommonDrawTask::Question(format!(
                     "{own_name_expression}の名前を入力してください"
                 )));
 
@@ -47,21 +47,21 @@ impl Phase for EntryPhase {
                     "一人目"
                 };
 
-                self.add_draw_task(Connect4DrawTask::Question(format!(
+                self.add_common_draw_task(CommonDrawTask::Question(format!(
                     "{own_name_expression}のidを入力してください"
                 )));
 
                 Some((AnswerType::Input, vec![Constants::PlayerA as isize]))
             }
             2 => {
-                self.add_draw_task(Connect4DrawTask::Question(
+                self.add_common_draw_task(CommonDrawTask::Question(
                     "二人目の名前を入力してください".into(),
                 ));
 
                 Some((AnswerType::Input, vec![Constants::PlayerB as isize]))
             }
             3 => {
-                self.add_draw_task(Connect4DrawTask::Question(
+                self.add_common_draw_task(CommonDrawTask::Question(
                     "二人目のidを入力してください".into(),
                 ));
 
@@ -91,7 +91,7 @@ impl Phase for EntryPhase {
                 self.state_position += 1;
 
                 if self.has_cpu || self.is_online {
-                    self.connect4_player_b = Some(PlayerInput {
+                    self.shogi55_player_b = Some(PlayerInput {
                         // TODO
                         // is_online の場合は CPU ではない
                         name: Some("CPU".into()),
@@ -138,18 +138,14 @@ impl Phase for EntryPhase {
 
     fn next_phase_id(&mut self) -> Option<usize> {
         if self.is_online {
-            Some(Connect4Phase::OnlineDecideFirstPlayer as usize)
+            Some(CommonPhase::OnlineDecideFirstPlayer as usize)
         } else {
-            Some(Connect4Phase::DecideFirstPlayer as usize)
+            Some(CommonPhase::DecideFirstPlayer as usize)
         }
     }
 
-    fn read_data(&mut self, game_data: &Rc<RefCell<dyn Any>>) -> Result<(), String> {
-        let mut game_data = game_data.borrow_mut();
-
-        let game_data = game_data
-            .downcast_mut::<Connect4Data>()
-            .ok_or("downcast error")?;
+    fn read_common_data(&mut self, game_data: &Rc<RefCell<CommonGameData>>) -> Result<(), String> {
+        let game_data = game_data.borrow();
 
         self.has_cpu = game_data.has_cpu();
 
@@ -158,54 +154,50 @@ impl Phase for EntryPhase {
         Ok(())
     }
 
-    fn write_data(&mut self, game_data: &Rc<RefCell<dyn Any>>) -> Result<(), String> {
+    fn write_common_data(&mut self, game_data: &Rc<RefCell<CommonGameData>>) -> Result<(), String> {
         let mut game_data = game_data.borrow_mut();
 
-        let game_data = game_data
-            .downcast_mut::<Connect4Data>()
-            .ok_or("downcast error")?;
-
-        let connect4_player = &self
-            .connect4_player_a
+        let shogi55_player = &self
+            .shogi55_player_a
             .as_ref()
-            .ok_or("connect4_player_a is none.")?;
+            .ok_or("shogi55_player_a is none.")?;
 
-        let player = connect4_player.create_connect4_player()?;
+        let player = shogi55_player.create_common_player()?;
 
         game_data.set_first_player(player);
 
-        let connect4_player = &self
-            .connect4_player_b
+        let shogi55_player = &self
+            .shogi55_player_b
             .as_ref()
-            .ok_or("connect4_player_b is none.")?;
+            .ok_or("shogi55_player_b is none.")?;
 
-        let player = connect4_player.create_connect4_player()?;
+        let player = shogi55_player.create_common_player()?;
 
         game_data.set_second_player(player);
 
         Ok(())
     }
 
-    fn get_draw_data(&mut self) -> Box<&mut dyn Any> {
-        Box::new(&mut self.draw_data)
+    fn get_common_draw_data(&mut self) -> &mut CommonDrawData {
+        &mut self.common_draw_data
     }
 }
 
-impl EntryPhase {
+impl CommonEntryPhase {
     fn entry(&mut self, args: &[isize]) -> Result<(), String> {
         match args.first() {
             None => Err("Arguments require input of player A/B.".to_owned()),
             Some(i) if *i == Constants::PlayerA as isize => {
-                if self.connect4_player_a.is_none() {
-                    self.connect4_player_a = Some(PlayerInput::default());
+                if self.shogi55_player_a.is_none() {
+                    self.shogi55_player_a = Some(PlayerInput::default());
                     Ok(())
                 } else {
                     Err("Player A already entered.".to_owned())
                 }
             }
             Some(i) if *i == Constants::PlayerB as isize => {
-                if self.connect4_player_b.is_none() {
-                    self.connect4_player_b = Some(PlayerInput::default());
+                if self.shogi55_player_b.is_none() {
+                    self.shogi55_player_b = Some(PlayerInput::default());
                     Ok(())
                 } else {
                     Err("Player B already entered.".to_owned())
@@ -216,12 +208,12 @@ impl EntryPhase {
     }
 
     fn check_player(&self, _: &Vec<isize>) -> Result<(), String> {
-        self.connect4_player_a
+        self.shogi55_player_a
             .as_ref()
             .ok_or("Player A is not entered.")?
             .check_fulfilled()?;
 
-        self.connect4_player_b
+        self.shogi55_player_b
             .as_ref()
             .ok_or("Player B is not entered.")?
             .check_fulfilled()?;
@@ -231,14 +223,14 @@ impl EntryPhase {
     fn set_name(&mut self, name: &str, args: &[isize]) -> Result<(), String> {
         match args.first() {
             None => Err("Arguments require input of player A/B.".to_owned()),
-            Some(i) if *i == Constants::PlayerA as isize => match self.connect4_player_a.as_mut() {
+            Some(i) if *i == Constants::PlayerA as isize => match self.shogi55_player_a.as_mut() {
                 None => Err("Player A is not entered.".to_owned()),
                 Some(player_a) => {
                     player_a.set_name(name.to_owned());
                     Ok(())
                 }
             },
-            Some(i) if *i == Constants::PlayerB as isize => match self.connect4_player_b.as_mut() {
+            Some(i) if *i == Constants::PlayerB as isize => match self.shogi55_player_b.as_mut() {
                 None => Err("Player B is not entered.".to_owned()),
                 Some(player_b) => {
                     player_b.set_name(name.to_owned());
@@ -252,14 +244,14 @@ impl EntryPhase {
     fn set_player_id(&mut self, id: u64, args: &[isize]) -> Result<(), String> {
         match args.first() {
             None => Err("Arguments require input of player A/B.".to_owned()),
-            Some(i) if *i == Constants::PlayerA as isize => match self.connect4_player_a.as_mut() {
+            Some(i) if *i == Constants::PlayerA as isize => match self.shogi55_player_a.as_mut() {
                 None => Err("Player A is not entered.".to_owned()),
                 Some(player_a) => {
                     player_a.set_id(id);
                     Ok(())
                 }
             },
-            Some(i) if *i == Constants::PlayerB as isize => match self.connect4_player_b.as_mut() {
+            Some(i) if *i == Constants::PlayerB as isize => match self.shogi55_player_b.as_mut() {
                 None => Err("Player B is not entered.".to_owned()),
                 Some(player_b) => {
                     player_b.set_id(id);
@@ -268,6 +260,10 @@ impl EntryPhase {
             },
             _ => Err("The argument does not indicate player A/B.".to_owned()),
         }
+    }
+
+    fn add_common_draw_task(&mut self, common_draw_task: CommonDrawTask) {
+        self.common_draw_data.add_task(common_draw_task);
     }
 }
 
@@ -291,17 +287,11 @@ impl PlayerInput {
 
         Ok(())
     }
-    pub fn create_connect4_player(&self) -> Result<Connect4Player, String> {
+    pub fn create_common_player(&self) -> Result<CommonPlayer, String> {
         let name = self.name.as_ref().ok_or("name not set.")?;
 
         let id = self.id.as_ref().ok_or("id not set.")?;
 
-        Ok(Connect4Player::new(name.to_owned(), *id))
-    }
-}
-
-impl EntryPhase {
-    fn add_draw_task(&mut self, connect4_draw_task: Connect4DrawTask) {
-        self.draw_data.add_task(connect4_draw_task);
+        Ok(CommonPlayer::new(name.to_owned(), *id))
     }
 }

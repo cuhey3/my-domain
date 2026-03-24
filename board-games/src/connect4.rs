@@ -2,37 +2,31 @@ pub mod draw_data;
 mod phases;
 pub mod structs;
 
-use crate::connect4::phases::online_decide_first_player::OnlineDecideFirstPlayerPhase;
-use crate::connect4::phases::{
-    decide_first_player::DecideFirstPlayerPhase, entry::EntryPhase, game_main::GameMainPhase,
-    setting::SettingPhase,
-};
+use crate::connect4::phases::game_main::GameMainPhase;
 use crate::connect4::structs::Connect4Data;
+use crate::framework::phases::CommonPhase;
+use crate::framework::phases::decide_first_player::CommonDecideFirstPlayerPhase;
+use crate::framework::phases::entry::CommonEntryPhase;
+use crate::framework::phases::online_decide_first_player::CommonOnlineDecideFirstPlayerPhase;
+use crate::framework::phases::setting::CommonSettingPhase;
 use crate::framework::{GameData, GameSystem};
-use phases::Connect4Phase;
 use std::cell::RefCell;
 use std::rc::Rc;
-// 0. 設定入力
-// 1. エントリー（ゆくゆくはマッチング処理）
-// (1-a. Setting のすり合わせ)
-// 2. 順番決め
-// 3. 初期状態構築
-// 4. プレイヤー着手
-// 5. 条件判定/状態遷移(4と5を繰り返す)
-// 6. ゲーム終了
+use crate::framework::structs::common_game_data::CommonGameData;
 
 pub fn init_connect4(seed: u64) -> GameSystem {
-    let mut data = Connect4Data::default();
+    let mut data = CommonGameData::default();
     data.set_seed(seed);
     GameSystem {
-        phase_id: Connect4Phase::Setting as usize,
+        phase_id: CommonPhase::Setting as usize,
         phases: vec![
-            Box::new(SettingPhase::default()),
-            Box::new(EntryPhase::default()),
-            Box::new(DecideFirstPlayerPhase::default()),
-            Box::new(OnlineDecideFirstPlayerPhase::default()),
+            Box::new(CommonSettingPhase::default()),
+            Box::new(CommonEntryPhase::default()),
+            Box::new(CommonDecideFirstPlayerPhase::default()),
+            Box::new(CommonOnlineDecideFirstPlayerPhase::default()),
             Box::new(GameMainPhase::default()),
         ],
-        game_data: Rc::new(RefCell::new(data)),
+        game_data: Rc::new(RefCell::new(Connect4Data::default())),
+        common_game_data: Rc::new(RefCell::new(data)),
     }
 }

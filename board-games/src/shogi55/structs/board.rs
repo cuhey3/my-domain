@@ -15,6 +15,7 @@ use std::sync::{Arc, Mutex};
 pub struct Shogi55Board {
     board_inner: BoardInner,
     pieces_in_hand: [Vec<Piece>; 2],
+    winner: TwoPlayer,
     last_player: TwoPlayer,
     possible_moves_cache: Arc<Mutex<Option<Vec<Shogi55Move>>>>,
 }
@@ -116,6 +117,10 @@ impl Shogi55Board {
             self.board_inner.placed_map_insert(place, piece_info);
         });
         self.init_all_possibilities();
+    }
+
+    pub fn is_first_player_turn(&self) -> bool {
+        self.get_next_player() == TwoPlayer::First
     }
 
     pub fn get_piece_in_hand(&self) -> &[Vec<Piece>; 2] {
@@ -770,5 +775,9 @@ impl Shogi55Board {
             .placed_map_get_mut(place)
             .unwrap()
             .set_possibility(&possibility);
+    }
+
+    pub fn winner(&self) -> TwoPlayer {
+        self.winner
     }
 }

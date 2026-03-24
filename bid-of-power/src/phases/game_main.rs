@@ -1,6 +1,7 @@
 use crate::structs::board::BoPBoard;
 use crate::structs::input::{BidInput, BoPInput, DisplayItemInput};
 use crate::structs::{BoPDrawData, BoPDrawTask};
+use board_games::framework::structs::common_draw_data::CommonDrawData;
 use board_games::framework::{AnswerType, Phase, PhaseType, TwoPlayer};
 use std::any::Any;
 use std::cell::RefCell;
@@ -100,5 +101,9 @@ impl Phase for GameMain {
 
     fn get_draw_data(&mut self) -> Box<&mut dyn Any> {
         Box::new(&mut self.draw_data)
+    }
+
+    fn get_common_draw_data(&mut self) -> &mut CommonDrawData {
+        todo!()
     }
 }
