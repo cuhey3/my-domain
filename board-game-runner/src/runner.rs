@@ -82,6 +82,8 @@ impl BoardGameRunner {
 
             let phase_id = self.game_system.phase_id;
 
+            let matcher_id = self.game_system.matcher_id;
+
             let phase = self
                 .game_system
                 .get_phase()
@@ -95,7 +97,7 @@ impl BoardGameRunner {
                 let peer_connection_wrapper = MatchingSequence::<
                     PeerConnectionAdapterImpl,
                     HttpClientAdapterImpl,
-                >::new(matching_server_url.to_owned())
+                >::new(matching_server_url.to_owned(), matcher_id)
                 .get_peer_connection_wrapper()
                 .await
                 .map_err(|err| format!("matching failed: {err}"))?;

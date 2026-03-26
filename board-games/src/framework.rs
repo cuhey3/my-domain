@@ -12,6 +12,7 @@ use std::rc::Rc;
 use structs::common_game_data::CommonGameData;
 
 pub struct GameSystem {
+    pub matcher_id: u64,
     pub phase_id: usize,
     pub phases: Vec<Box<dyn Phase>>,
     pub game_data: Rc<RefCell<dyn Any>>,

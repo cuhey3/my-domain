@@ -13,6 +13,7 @@ pub fn init_pre_game(seed: u64) -> GameSystem {
     let mut data = CommonGameData::default();
     data.set_seed(seed);
     GameSystem {
+        matcher_id: 0,
         phase_id: PreGamePhase::SelectGame as usize,
         phases: vec![Box::new(SelectGamePhase::default())],
         game_data: Rc::new(RefCell::new(PreGameData::default())),

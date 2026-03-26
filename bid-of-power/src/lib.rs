@@ -19,6 +19,7 @@ pub fn init_bop(seed: u64) -> GameSystem {
     data.set_seed(seed);
 
     GameSystem {
+        matcher_id: 30,
         phase_id: CommonPhase::Setting as usize,
         phases: vec![
             Box::new(CommonSettingPhase::default()),

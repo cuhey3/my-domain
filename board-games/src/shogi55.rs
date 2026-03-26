@@ -19,6 +19,7 @@ pub fn init_shogi55(seed: u64) -> GameSystem {
     let mut data = CommonGameData::default();
     data.set_seed(seed);
     GameSystem {
+        matcher_id: 20,
         phase_id: CommonPhase::Setting as usize,
         phases: vec![
             Box::new(CommonSettingPhase::default()),

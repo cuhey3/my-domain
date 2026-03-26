@@ -18,6 +18,7 @@ pub fn init_connect4(seed: u64) -> GameSystem {
     let mut data = CommonGameData::default();
     data.set_seed(seed);
     GameSystem {
+        matcher_id: 10,
         phase_id: CommonPhase::Setting as usize,
         phases: vec![
             Box::new(CommonSettingPhase::default()),
