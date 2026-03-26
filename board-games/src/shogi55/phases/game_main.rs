@@ -1,9 +1,8 @@
 use crate::draw_data::Shogi55DrawTask;
 use crate::framework::structs::common_draw_data::CommonDrawData;
+use crate::framework::structs::common_game_data::CommonGameData;
 use crate::framework::structs::match_setting::MatchSetting;
-use crate::framework::{
-    AnswerType, DrawData, GameData, Phase, PhaseType, TwoPlayer,
-};
+use crate::framework::{AnswerType, DrawData, GameData, Phase, TwoPlayer};
 use crate::shogi55::draw_data::Shogi55DrawData;
 use crate::shogi55::phases::Shogi55Phase;
 use crate::shogi55::structs::Shogi55Data;
@@ -16,11 +15,10 @@ use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::str::FromStr;
-use crate::framework::structs::common_game_data::CommonGameData;
 
 #[derive(Default)]
 pub struct GameMainPhase {
-    shogi55_setting: MatchSetting,
+    match_setting: MatchSetting,
     board: Shogi55Board,
     first_player_name: String,
     first_player_cpu_flag: bool,
@@ -152,12 +150,8 @@ impl Phase for GameMainPhase {
         Shogi55Phase::GameMain as usize
     }
 
-    fn phase_type(&self) -> Option<PhaseType> {
-        Some(PhaseType::GameMain)
-    }
-
     fn dialog_question(&mut self) -> Option<(AnswerType, Vec<isize>)> {
-        let enable_do_over = self.shogi55_setting.get_enable_do_over();
+        let enable_do_over = self.match_setting.get_enable_do_over();
 
         if self.board.winner().exist() {
             return if enable_do_over {
@@ -331,7 +325,7 @@ impl Phase for GameMainPhase {
 
         self.second_player_online_flag = data.second_player_is_online();
 
-        self.shogi55_setting = *data.get_setting();
+        self.match_setting = *data.get_setting();
 
         self.first_player_name = data.get_first_player().get_name().clone();
 

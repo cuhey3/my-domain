@@ -1,6 +1,7 @@
 use crate::structs::board::{BoPBoard, Status};
 use board_games::framework::TwoPlayer;
 
+#[derive(Debug)]
 pub struct Item {
     id: u32,
     name: String,
@@ -23,12 +24,15 @@ pub struct ItemDefinition {}
 impl ItemDefinition {
     pub fn apply_item(id: u32, board: &mut BoPBoard, player: &TwoPlayer) {
         let [first_info, second_info] = board.get_player_infos();
+
         let (own_info, opponent_info) = if player == &TwoPlayer::First {
             (first_info, second_info)
         } else {
             (second_info, first_info)
         };
+
         let mut winner = TwoPlayer::None;
+
         match id {
             0 => own_info.add_amount(Status::Attack, 5),
             1 => own_info.add_amount(Status::Attack, 10),
@@ -77,6 +81,7 @@ impl ItemDefinition {
             20 => opponent_info.shrink(),
             _ => panic!(),
         }
+
         if winner != TwoPlayer::None {
             board.set_winner(winner);
         }
@@ -106,6 +111,7 @@ impl ItemDefinition {
             20 => ("シュリンク", "相手ATK,DEFを低い方に合わせ-1"),
             _ => panic!(),
         };
+
         (name.to_string(), description.to_string())
     }
 }

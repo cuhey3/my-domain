@@ -1,10 +1,10 @@
 use crate::framework::phases::CommonPhase;
 use crate::framework::structs::common_draw_data::{CommonDrawData, CommonDrawTask};
-use crate::framework::{AnswerType, Constants, Phase, PhaseType};
+use crate::framework::structs::common_game_data::CommonGameData;
+use crate::framework::structs::common_player::CommonPlayer;
+use crate::framework::{AnswerType, Constants, Phase};
 use std::cell::RefCell;
 use std::rc::Rc;
-use crate::framework::structs::common_player::CommonPlayer;
-use crate::framework::structs::common_game_data::CommonGameData;
 
 #[derive(Default)]
 pub struct CommonEntryPhase {
@@ -19,10 +19,6 @@ pub struct CommonEntryPhase {
 impl Phase for CommonEntryPhase {
     fn get_phase_id(&self) -> usize {
         CommonPhase::Entry as usize
-    }
-
-    fn phase_type(&self) -> Option<PhaseType> {
-        Some(PhaseType::Entry)
     }
 
     fn dialog_question(&mut self) -> Option<(AnswerType, Vec<isize>)> {
@@ -260,10 +256,6 @@ impl CommonEntryPhase {
             },
             _ => Err("The argument does not indicate player A/B.".to_owned()),
         }
-    }
-
-    fn add_common_draw_task(&mut self, common_draw_task: CommonDrawTask) {
-        self.common_draw_data.add_task(common_draw_task);
     }
 }
 

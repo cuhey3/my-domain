@@ -1,12 +1,12 @@
 use crate::framework::phases::CommonPhase;
 use crate::framework::structs::common_draw_data::{CommonDrawData, CommonDrawTask};
-use crate::framework::{AnswerType, GameData, Phase, PhaseType};
+use crate::framework::structs::common_game_data::CommonGameData;
+use crate::framework::{AnswerType, GameData, Phase};
 use board_game_if::structs::decide_first_player::DecideFirstPlayerSequence;
 use rand::rngs::SmallRng;
 use rand::{RngCore, SeedableRng};
 use std::cell::RefCell;
 use std::rc::Rc;
-use crate::framework::structs::common_game_data::CommonGameData;
 
 #[derive(Default)]
 pub struct CommonOnlineDecideFirstPlayerPhase {
@@ -23,10 +23,6 @@ pub struct CommonOnlineDecideFirstPlayerPhase {
 impl Phase for CommonOnlineDecideFirstPlayerPhase {
     fn get_phase_id(&self) -> usize {
         CommonPhase::OnlineDecideFirstPlayer as usize
-    }
-
-    fn phase_type(&self) -> Option<PhaseType> {
-        Some(PhaseType::DecideFirstPlayer)
     }
 
     fn dialog_question(&mut self) -> Option<(AnswerType, Vec<isize>)> {
@@ -119,11 +115,5 @@ impl Phase for CommonOnlineDecideFirstPlayerPhase {
         self.decide_first_player_sequence.set_answer_json(json)?;
 
         Ok(())
-    }
-}
-
-impl CommonOnlineDecideFirstPlayerPhase {
-    fn add_common_draw_task(&mut self, common_draw_task: CommonDrawTask) {
-        self.common_draw_data.add_task(common_draw_task);
     }
 }

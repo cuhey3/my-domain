@@ -1,15 +1,15 @@
 use crate::GameData;
+use crate::framework::GameSystem;
 use crate::framework::phases::CommonPhase;
 use crate::framework::phases::decide_first_player::CommonDecideFirstPlayerPhase;
 use crate::framework::phases::entry::CommonEntryPhase;
 use crate::framework::phases::online_decide_first_player::CommonOnlineDecideFirstPlayerPhase;
 use crate::framework::phases::setting::CommonSettingPhase;
-use crate::framework::GameSystem;
+use crate::framework::structs::common_game_data::CommonGameData;
 use crate::shogi55::phases::game_main::GameMainPhase;
 use crate::shogi55::structs::Shogi55Data;
 use std::cell::RefCell;
 use std::rc::Rc;
-use crate::framework::structs::common_game_data::CommonGameData;
 
 pub mod draw_data;
 mod phases;

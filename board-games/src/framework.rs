@@ -2,7 +2,8 @@ pub mod input_util;
 pub mod phases;
 pub mod structs;
 
-use crate::framework::structs::common_draw_data::CommonDrawData;
+use crate::BoardGames;
+use crate::framework::structs::common_draw_data::{CommonDrawData, CommonDrawTask};
 use rand::rngs::SmallRng;
 use rand::{RngCore, SeedableRng};
 use std::any::Any;
@@ -25,13 +26,6 @@ impl GameSystem {
     }
 }
 
-pub enum PhaseType {
-    Setting,
-    Entry,
-    DecideFirstPlayer,
-    GameMain,
-}
-
 pub trait DrawData {
     fn has_task(&self) -> bool;
 }
@@ -52,8 +46,6 @@ pub enum AnswerType {
 
 pub trait Phase {
     fn get_phase_id(&self) -> usize;
-
-    fn phase_type(&self) -> Option<PhaseType>;
 
     fn dialog_question(&mut self) -> Option<(AnswerType, Vec<isize>)>;
 
@@ -87,6 +79,10 @@ pub trait Phase {
 
     fn get_common_draw_data(&mut self) -> &mut CommonDrawData;
 
+    fn add_common_draw_task(&mut self, common_draw_task: CommonDrawTask) {
+        self.get_common_draw_data().add_task(common_draw_task);
+    }
+
     fn is_required_matching(&self) -> bool {
         false
     }
@@ -97,6 +93,10 @@ pub trait Phase {
 
     fn dialog_answer_json(&mut self, _: &str) -> Result<(), String> {
         todo!()
+    }
+
+    fn next_game_id(&mut self) -> Option<BoardGames> {
+        None
     }
 }
 
@@ -148,4 +148,3 @@ impl TwoPlayer {
         !matches!(self, TwoPlayer::None)
     }
 }
-

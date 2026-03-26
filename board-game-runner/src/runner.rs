@@ -1,10 +1,12 @@
 use crate::BoardGames;
 use crate::connect4::Connect4Drawer;
+use crate::pre_game::PreGameDrawer;
 use crate::shogi55::Shogi55Drawer;
 use bid_of_power::init_bop;
 use bid_of_power::structs::BoPDrawer;
 use board_games::framework::structs::common_draw_data::{CommonDrawData, CommonDrawTask};
 use board_games::framework::{AnswerType, Drawer, GameSystem};
+use board_games::pre_game::init_pre_game;
 use board_games::{init_connect4, init_shogi55};
 use http_client_adapter::http_client_adapter_impl::HttpClientAdapterImpl;
 use matching_if::webrtc::matching_sequence::MatchingSequence;
@@ -21,20 +23,38 @@ pub struct BoardGameRunner {
 
 impl BoardGameRunner {
     pub fn new_with_name(board_game_name: BoardGames) -> Self {
+        let mut runner = BoardGameRunner {
+            game_system: init_pre_game(0),
+            peer_connection_wrapper: None,
+            drawer: Box::new(PreGameDrawer::default()),
+            common_drawer: CommonDrawer,
+        };
+        runner.update_by_game_id(board_game_name);
+        runner
+    }
+
+    pub fn update_by_game_id(&mut self, board_games: BoardGames) {
         let seed = getrandom::u64().unwrap();
-        match board_game_name {
-            BoardGames::Connect4 => BoardGameRunner {
-                game_system: init_connect4(seed),
-                peer_connection_wrapper: None,
-                drawer: Box::new(Connect4Drawer::default()),
-                common_drawer: CommonDrawer,
-            },
-            BoardGames::Shogi55 => BoardGameRunner {
-                game_system: init_shogi55(seed),
-                peer_connection_wrapper: None,
-                drawer: Box::new(Shogi55Drawer::default()),
-                common_drawer: CommonDrawer,
-            },
+        match board_games {
+            BoardGames::Connect4 => {
+                self.game_system = init_connect4(seed);
+                self.peer_connection_wrapper = None;
+                self.drawer = Box::new(Connect4Drawer::default());
+                self.common_drawer = CommonDrawer;
+            }
+            BoardGames::Shogi55 => {
+                self.game_system = init_shogi55(seed);
+                self.peer_connection_wrapper = None;
+                self.drawer = Box::new(Shogi55Drawer::default());
+                self.common_drawer = CommonDrawer;
+            }
+            BoardGames::BoP => {
+                self.game_system = init_bop(seed);
+                self.peer_connection_wrapper = None;
+                self.drawer = Box::new(BoPDrawer::default());
+                self.common_drawer = CommonDrawer;
+            }
+            _ => {}
         }
     }
 
@@ -161,11 +181,14 @@ impl BoardGameRunner {
             phase.write_common_data(common_game_data)?;
             phase.write_data(game_data)?;
 
+            self.common_drawer.draw(phase.get_common_draw_data());
             if phase.has_draw_task() {
                 self.drawer.draw(phase.get_draw_data());
             }
 
-            if let Some(phase_id) = phase.next_phase_id() {
+            if let Some(game_id) = phase.next_game_id() {
+                self.update_by_game_id(game_id);
+            } else if let Some(phase_id) = phase.next_phase_id() {
                 self.game_system.phase_id = phase_id;
             } else {
                 break Ok(());
@@ -188,5 +211,9 @@ impl CommonDrawer {
                 _ => {}
             }
         }
+    }
+
+    fn draw_error(&mut self, error: String) {
+        println!("{}", error);
     }
 }

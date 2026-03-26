@@ -1,7 +1,7 @@
-use rand::prelude::SmallRng;
+use crate::GameData;
 use crate::framework::structs::common_player::CommonPlayer;
 use crate::framework::structs::match_setting::{MatchMode, MatchSetting};
-use crate::GameData;
+use rand::prelude::SmallRng;
 
 #[derive(Default)]
 pub struct CommonGameData {

@@ -5,16 +5,14 @@ use crate::connect4::structs::simulate::Connect4Simulate;
 use crate::connect4::draw_data::{Connect4DrawData, Connect4DrawTask};
 use crate::connect4::structs::search_checkmate::SearchCheckmate;
 use crate::framework::structs::common_draw_data::CommonDrawData;
+use crate::framework::structs::common_game_data::CommonGameData;
 use crate::framework::structs::match_setting::MatchSetting;
-use crate::framework::{
-    AnswerType, DrawData, GameData, Phase, PhaseType, TwoPlayer,
-};
+use crate::framework::{AnswerType, DrawData, GameData, Phase, TwoPlayer};
 use rand::rngs::SmallRng;
 use rand::{RngCore, SeedableRng};
 use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
-use crate::framework::structs::common_game_data::CommonGameData;
 
 #[derive(Default)]
 pub struct GameMainPhase {
@@ -34,10 +32,6 @@ pub struct GameMainPhase {
 impl Phase for GameMainPhase {
     fn get_phase_id(&self) -> usize {
         Connect4Phase::GameMain as usize
-    }
-
-    fn phase_type(&self) -> Option<PhaseType> {
-        Some(PhaseType::GameMain)
     }
 
     fn dialog_question(&mut self) -> Option<(AnswerType, Vec<isize>)> {

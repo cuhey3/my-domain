@@ -40,25 +40,51 @@ impl BoPInput {
         }
     }
 
-    // 入力がやり直しになったら Input を default に戻す
-    pub fn confirm(&mut self, answer: &str) {
+    pub fn confirm(&mut self, answer: &str) -> bool {
         if matches!(
             self,
             BoPInput::Nothing | BoPInput::DisplayItem(_) | BoPInput::BattleChoose(_)
         ) {
-            return;
+            return true;
         }
         match answer {
-            "c" | "n" => match self {
-                BoPInput::Bid(input) => *input = BidInput::default(),
-                BoPInput::ItemUse(input) => *input = ItemUseInput::default(),
-                _ => panic!(),
-            },
-            _ => match self {
-                BoPInput::Bid(input) => input.confirm = Confirm::Confirmed,
-                BoPInput::ItemUse(input) => input.confirm = Confirm::Confirmed,
-                _ => panic!(),
-            },
+            "c" | "n" => false,
+            _ => {
+                match self {
+                    BoPInput::Bid(input) => input.confirm = Confirm::Confirmed,
+                    BoPInput::ItemUse(input) => input.confirm = Confirm::Confirmed,
+                    _ => panic!(),
+                }
+                
+                true
+            }
+        }
+    }
+
+    pub fn player_keeping_reset(&mut self) {
+        match self {
+            BoPInput::Nothing | BoPInput::DisplayItem(_) => {}
+            BoPInput::Bid(input) => {
+                let player = input.player;
+
+                *input = BidInput::default();
+
+                input.player = player;
+            }
+            BoPInput::ItemUse(input) => {
+                let player = input.player;
+
+                *input = ItemUseInput::default();
+
+                input.player = player;
+            }
+            BoPInput::BattleChoose(input) => {
+                let player = input.player;
+
+                *input = BattleChooseInput::default();
+
+                input.player = player;
+            }
         }
     }
 
@@ -66,13 +92,18 @@ impl BoPInput {
         match self {
             Self::Bid(input) => {
                 let mut split = answer.split(",");
+
                 if let Some(list_no_string) = split.next()
                     && let Some(amount_string) = split.next()
                 {
                     let list_no = convert_input::simple_parse(list_no_string)?;
+
                     let amount = convert_input::simple_parse(amount_string)?;
+
                     input.list_no = list_no;
+
                     input.amount = amount;
+
                     input.confirm = Confirm::Confirming;
                 } else {
                     return Err(format!("入力が不正です: {}", answer));
@@ -81,13 +112,18 @@ impl BoPInput {
             }
             Self::ItemUse(input) => {
                 let stock_no = convert_input::accept_empty_parse(answer)?;
+
                 input.stock_no = stock_no;
+
                 input.confirm = Confirm::Confirming;
+
                 Ok(())
             }
             Self::BattleChoose(input) => {
                 let battle_flag = convert_input::yes_or_no(answer)?;
+
                 input.battle_flag = battle_flag;
+
                 Ok(())
             }
             _ => panic!(),
@@ -135,9 +171,11 @@ impl BidInput {
     pub fn get_list_no(&self) -> usize {
         self.list_no
     }
+
     pub fn get_player(&self) -> &TwoPlayer {
         &self.player
     }
+
     pub fn get_amount(&self) -> u32 {
         self.amount
     }
@@ -156,5 +194,9 @@ impl ItemUseInput {
 impl BattleChooseInput {
     pub fn get_player(&self) -> &TwoPlayer {
         &self.player
+    }
+
+    pub fn get_battle_flag(&self) -> bool {
+        self.battle_flag
     }
 }

@@ -9,10 +9,10 @@ use crate::framework::phases::decide_first_player::CommonDecideFirstPlayerPhase;
 use crate::framework::phases::entry::CommonEntryPhase;
 use crate::framework::phases::online_decide_first_player::CommonOnlineDecideFirstPlayerPhase;
 use crate::framework::phases::setting::CommonSettingPhase;
+use crate::framework::structs::common_game_data::CommonGameData;
 use crate::framework::{GameData, GameSystem};
 use std::cell::RefCell;
 use std::rc::Rc;
-use crate::framework::structs::common_game_data::CommonGameData;
 
 pub fn init_connect4(seed: u64) -> GameSystem {
     let mut data = CommonGameData::default();

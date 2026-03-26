@@ -2,6 +2,9 @@ pub mod board;
 pub mod input;
 mod items;
 
+use crate::structs::board::PlayerInfo;
+use crate::structs::input::BidInput;
+use crate::structs::items::Item;
 use board_games::GameData;
 use board_games::framework::{DrawData, Drawer};
 use rand::rngs::SmallRng;
@@ -50,6 +53,9 @@ impl BoPDrawData {
 pub enum BoPDrawTask {
     Message(String),
     Question(String),
+    ListItems(Vec<Item>),
+    CurrentBids(Vec<BidInput>),
+    PlayerInfo(PlayerInfo, PlayerInfo),
 }
 
 #[derive(Default)]
@@ -58,11 +64,25 @@ pub struct BoPDrawer {}
 impl Drawer for BoPDrawer {
     fn draw(&mut self, draw_data: Box<&mut dyn Any>) {
         let draw_data = draw_data.downcast_mut::<BoPDrawData>().unwrap();
+
         while let Some(task) = draw_data.take_task() {
             match task {
                 BoPDrawTask::Question(message) => println!("{}", message),
                 BoPDrawTask::Message(message) => println!("{}", message),
-                _ => {}
+                BoPDrawTask::ListItems(items) => {
+                    for item in items {
+                        println!("{:?}", item);
+                    }
+                }
+                BoPDrawTask::CurrentBids(items) => {
+                    for item in items {
+                        println!("{:?}", item);
+                    }
+                }
+                BoPDrawTask::PlayerInfo(info1, info2) => {
+                    println!("{:?}", info1);
+                    println!("{:?}", info2);
+                }
             }
         }
     }
